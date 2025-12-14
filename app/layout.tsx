@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import { Providers } from './providers';
 import './globals.css';
+
+export const metadata: Metadata = {
+  title: 'VyasaAI',
+  description: 'VyasaAI School Management',
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
