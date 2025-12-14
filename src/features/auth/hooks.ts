@@ -13,9 +13,14 @@ export function useRequestOTP() {
 
   return useMutation({
     mutationFn: (params: RequestOTPParams) => requestOTP(params),
-    onSuccess: (data) => {
-      // Store email for verify page
-      storage.setUserEmail(data.email);
+    onSuccess: (data, variables) => {
+      // Store mobile number and country code for verify page
+      storage.setUserEmail(variables.email);
+      // Store additional data for OTP verification
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pendingMobileNo', variables.mobileNo);
+        localStorage.setItem('pendingCountryCode', variables.countryCode);
+      }
       // Navigate to OTP verification
       router.push('/auth/verify-otp');
     },

@@ -12,24 +12,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export default function VerifyOTPPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
+  const [mobileNo, setMobileNo] = useState('');
+  const [countryCode, setCountryCode] = useState('');
   const [otp, setOtp] = useState('');
   const verifyOTPMutation = useVerifyOTP();
 
   useEffect(() => {
-    // Get email from storage
+    // Get stored data
     const storedEmail = storage.getUserEmail();
-    if (!storedEmail) {
-      // No email stored, redirect to login
-      router.push('/auth/login');
-      return;
+    if (typeof window !== 'undefined') {
+      const storedMobileNo = localStorage.getItem('pendingMobileNo');
+      const storedCountryCode = localStorage.getItem('pendingCountryCode');
+      
+      if (!storedMobileNo || !storedCountryCode || !storedEmail) {
+        // No data stored, redirect to login
+        router.push('/auth/login');
+        return;
+      }
+      setEmail(storedEmail);
+      setMobileNo(storedMobileNo);
+      setCountryCode(storedCountryCode);
     }
-    setEmail(storedEmail);
   }, [router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    verifyOTPMutation.mutate({ email, otp });
+    if (!mobileNo || !countryCode || !email) return;
+    verifyOTPMutation.mutate({ countryCode, mobileNo, otp, email });
   };
 
   const handleResendOTP = () => {
@@ -42,7 +51,7 @@ export default function VerifyOTPPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Verify OTP</CardTitle>
           <CardDescription>
-            Enter the 6-digit code sent to <strong>{email}</strong>
+            Enter the 6-digit code sent to <strong>{countryCode} {mobileNo}</strong>
           </CardDescription>
         </CardHeader>
         <CardContent>

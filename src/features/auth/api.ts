@@ -1,17 +1,22 @@
 import api from '@/lib/api';
 
 export interface RequestOTPParams {
+  countryCode: string;
+  mobileNo: string;
   email: string;
 }
 
 export interface RequestOTPResponse {
   message: string;
-  email: string;
+  email?: string;
+  mobileNo?: string;
 }
 
 export interface VerifyOTPParams {
-  email: string;
+  countryCode: string;
+  mobileNo: string;
   otp: string;
+  email: string;
 }
 
 export interface VerifyOTPResponse {
@@ -25,18 +30,18 @@ export interface VerifyOTPResponse {
 }
 
 /**
- * Request OTP to be sent to user's email
+ * Request OTP to be sent to user's phone
  */
 export async function requestOTP(params: RequestOTPParams): Promise<RequestOTPResponse> {
-  const response = await api.post<RequestOTPResponse>('/auth/request-otp', params);
+  const response = await api.post<RequestOTPResponse>('/auth/send-otp', params);
   return response.data;
 }
 
 /**
- * Verify OTP and get access token
+ * Verify OTP and login to get access token
  */
 export async function verifyOTP(params: VerifyOTPParams): Promise<VerifyOTPResponse> {
-  const response = await api.post<VerifyOTPResponse>('/auth/verify-otp', params);
+  const response = await api.post<VerifyOTPResponse>('/auth/login', params);
   return response.data;
 }
 

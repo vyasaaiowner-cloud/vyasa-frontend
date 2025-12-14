@@ -9,14 +9,21 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function RegisterPage() {
+  const [loginMethod, setLoginMethod] = useState<'email' | 'mobile'>('mobile');
   const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
+  const [mobileNo, setMobileNo] = useState('');
   const requestOTPMutation = useRequestOTP();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // For OTP flow, we just need email. Name will be collected after verification
-    requestOTPMutation.mutate({ email });
+    
+    // Send data based on selected method
+    if (loginMethod === 'email') {
+      requestOTPMutation.mutate({ email, countryCode: '', mobileNo: '' });
+    } else {
+      requestOTPMutation.mutate({ email: '', countryCode, mobileNo });
+    }
   };
 
   return (
@@ -24,22 +31,69 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Create your account</CardTitle>
-          <CardDescription>Enter your email to get started with Vyasa</CardDescription>
+          <CardDescription>Choose your registration method</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@school.edu"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={requestOTPMutation.isPending}
-              />
+            <div className="flex gap-2 mb-4">
+              <Button
+                type="button"
+                variant={loginMethod === 'mobile' ? 'default' : 'outline'}
+                className="flex-1"
+                onClick={() => setLoginMethod('mobile')}
+              >
+                Mobile Number
+              </Button>
+              <Button
+                type="button"
+                variant={loginMethod === 'email' ? 'default' : 'outline'}
+                className="flex-1"
+                onClick={() => setLoginMethod('email')}
+              >
+                Email
+              </Button>
             </div>
+            
+            {loginMethod === 'email' ? (
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@school.edu"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={requestOTPMutation.isPending}
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="mobile">Mobile Number</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="countryCode"
+                    type="text"
+                    placeholder="+91"
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    required
+                    className="w-20"
+                    disabled={requestOTPMutation.isPending}
+                  />
+                  <Input
+                    id="mobileNo"
+                    type="tel"
+                    placeholder="1234567890"
+                    value={mobileNo}
+                    onChange={(e) => setMobileNo(e.target.value.replace(/\D/g, ''))}
+                    required
+                    disabled={requestOTPMutation.isPending}
+                  />
+                </div>
+              </div>
+            )}
+            
             {requestOTPMutation.isError && (
               <p className="text-sm text-red-600">
                 {requestOTPMutation.error instanceof Error
@@ -52,7 +106,11 @@ export default function RegisterPage() {
                 OTP sent! Redirecting to verification...
               </p>
             )}
-            <Button type="submit" className="w-full" disabled={requestOTPMutation.isPending}>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={requestOTPMutation.isPending}
+            >
               {requestOTPMutation.isPending ? 'Sending OTP...' : 'Continue with OTP'}
             </Button>
             <p className="text-center text-sm text-slate-600">
