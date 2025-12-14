@@ -1,5 +1,19 @@
 /**
  * Safe localStorage wrapper with SSR-friendly checks
+ * 
+ * ⚠️ SECURITY WARNING: localStorage is vulnerable to XSS attacks
+ * TODO: Migrate to httpOnly cookies for production
+ * 
+ * Migration path:
+ * 1. Backend: Set token in httpOnly cookie on login/verify
+ * 2. Frontend: Remove token storage, rely on automatic cookie sending
+ * 3. Update api.ts to not manually attach Authorization header
+ * 4. Update this file to only store non-sensitive user preferences
+ * 
+ * Benefits of httpOnly cookies:
+ * - Not accessible via JavaScript (XSS protection)
+ * - Automatically sent with requests
+ * - Server-side validation possible in middleware
  */
 
 const STORAGE_KEYS = {

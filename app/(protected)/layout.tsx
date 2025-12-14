@@ -1,28 +1,56 @@
 'use client';
 
-import { useEffect, ReactNode } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { storage } from '@/lib/storage';
-import { useLogout } from '@/features/auth';
+import { useLogout, getCurrentUser } from '@/features/auth';
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const logout = useLogout();
+  const [shouldValidate, setShouldValidate] = useState(false);
 
+  // Check if token exists before attempting to validate
   useEffect(() => {
-    // Check authentication on mount
     const token = storage.getToken();
-    
     if (!token) {
       router.push('/auth/login');
+    } else {
+      setShouldValidate(true);
     }
   }, [router]);
 
-  // Don't render protected content until we verify token exists
-  const token = storage.getToken();
-  
-  if (!token) {
-    return null; // or a loading spinner
+  // Validate token by fetching current user
+  const { data: user, isLoading, isError } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: getCurrentUser,
+    enabled: shouldValidate,
+    retry: false,
+  });
+
+  // If validation fails, logout
+  useEffect(() => {
+    if (isError && shouldValidate) {
+      logout();
+    }
+  }, [isError, shouldValidate, logout]);
+
+  // Show loading state while validating
+  if (!shouldValidate || isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if no user data
+  if (!user) {
+    return null;
   }
 
   return (
