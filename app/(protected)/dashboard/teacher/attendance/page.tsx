@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TableSkeleton } from '@/components/skeletons';
 import { classesApi } from '@/features/classes/api';
@@ -251,8 +251,6 @@ export default function TeacherAttendancePage() {
                               variant={
                                 attendanceData[student.id] === 'PRESENT'
                                   ? 'default'
-                                  : attendanceData[student.id] === 'LATE'
-                                  ? 'secondary'
                                   : 'destructive'
                               }
                             >
@@ -270,13 +268,6 @@ export default function TeacherAttendancePage() {
                               onClick={() => handleAttendanceChange(student.id, 'PRESENT')}
                             >
                               <CheckCircle2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={attendanceData[student.id] === 'LATE' ? 'secondary' : 'outline'}
-                              onClick={() => handleAttendanceChange(student.id, 'LATE')}
-                            >
-                              <Clock className="h-4 w-4" />
                             </Button>
                             <Button
                               size="sm"
