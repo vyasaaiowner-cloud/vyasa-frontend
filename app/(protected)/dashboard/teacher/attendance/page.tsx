@@ -110,8 +110,7 @@ export default function TeacherAttendancePage() {
     const total = students.length;
     const present = Object.values(attendanceData).filter(s => s === 'PRESENT').length;
     const absent = Object.values(attendanceData).filter(s => s === 'ABSENT').length;
-    const late = Object.values(attendanceData).filter(s => s === 'LATE').length;
-    return { total, present, absent, late };
+    return { total, present, absent };
   };
 
   const stats = getAttendanceStats();

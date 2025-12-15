@@ -13,7 +13,9 @@ import { Plus, Pencil, Trash2, UserCheck, UserX } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TableSkeleton } from '@/components/skeletons';
 import { teachersApi } from '@/features/teachers/api';
-import type { Teacher, CreateTeacherDto, UpdateTeacherDto } from '@/features/teachers/types';import { toast } from 'sonner';
+import type { Teacher, CreateTeacherDto, UpdateTeacherDto } from '@/features/teachers/types';
+import { toast } from 'sonner';
+
 export default function TeachersManagementPage() {
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
