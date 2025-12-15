@@ -19,6 +19,8 @@
 const STORAGE_KEYS = {
   ACCESS_TOKEN: 'accessToken',
   USER_EMAIL: 'userEmail',
+  PENDING_MOBILE: 'pendingMobileNo',
+  PENDING_COUNTRY_CODE: 'pendingCountryCode',
 } as const;
 
 class Storage {
@@ -78,8 +80,46 @@ class Storage {
     try {
       localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
       localStorage.removeItem(STORAGE_KEYS.USER_EMAIL);
+      localStorage.removeItem(STORAGE_KEYS.PENDING_MOBILE);
+      localStorage.removeItem(STORAGE_KEYS.PENDING_COUNTRY_CODE);
     } catch (error) {
       console.error('Failed to clear storage:', error);
+    }
+  }
+
+  // Pending OTP data methods
+  setPendingMobile(mobileNo: string, countryCode: string): void {
+    if (!this.isAvailable()) return;
+    try {
+      localStorage.setItem(STORAGE_KEYS.PENDING_MOBILE, mobileNo);
+      localStorage.setItem(STORAGE_KEYS.PENDING_COUNTRY_CODE, countryCode);
+    } catch (error) {
+      console.error('Failed to save pending mobile:', error);
+    }
+  }
+
+  getPendingMobile(): { mobileNo: string; countryCode: string } | null {
+    if (!this.isAvailable()) return null;
+    try {
+      const mobileNo = localStorage.getItem(STORAGE_KEYS.PENDING_MOBILE);
+      const countryCode = localStorage.getItem(STORAGE_KEYS.PENDING_COUNTRY_CODE);
+      if (mobileNo && countryCode) {
+        return { mobileNo, countryCode };
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to read pending mobile:', error);
+      return null;
+    }
+  }
+
+  clearPendingMobile(): void {
+    if (!this.isAvailable()) return;
+    try {
+      localStorage.removeItem(STORAGE_KEYS.PENDING_MOBILE);
+      localStorage.removeItem(STORAGE_KEYS.PENDING_COUNTRY_CODE);
+    } catch (error) {
+      console.error('Failed to clear pending mobile:', error);
     }
   }
 }
