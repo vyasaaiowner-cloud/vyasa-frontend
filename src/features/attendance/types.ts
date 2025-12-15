@@ -1,5 +1,6 @@
 // Attendance types matching backend DTOs
-export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'LATE';
+// Phase 0 PRD: Only PRESENT / ABSENT (no LATE)
+export type AttendanceStatus = 'PRESENT' | 'ABSENT';
 
 export interface StudentAttendanceDto {
   studentId: string;

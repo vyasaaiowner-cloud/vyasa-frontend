@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Bell, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Calendar, Bell, CheckCircle2, XCircle } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TableSkeleton, StatCardsSkeleton } from '@/components/skeletons';
 import { attendanceApi } from '@/features/attendance/api';
@@ -29,9 +29,8 @@ export default function ParentDashboard() {
     const total = attendanceRecords.length;
     const present = attendanceRecords.filter(r => r.status === 'PRESENT').length;
     const absent = attendanceRecords.filter(r => r.status === 'ABSENT').length;
-    const late = attendanceRecords.filter(r => r.status === 'LATE').length;
     const percentage = total > 0 ? ((present / total) * 100).toFixed(1) : '0';
-    return { total, present, absent, late, percentage };
+    return { total, present, absent, percentage };
   };
 
   const stats = getAttendanceStats();
@@ -42,8 +41,6 @@ export default function ParentDashboard() {
         return <CheckCircle2 className="h-4 w-4 text-green-600" />;
       case 'ABSENT':
         return <XCircle className="h-4 w-4 text-red-600" />;
-      case 'LATE':
-        return <Clock className="h-4 w-4 text-amber-600" />;
     }
   };
 
@@ -161,8 +158,6 @@ export default function ParentDashboard() {
                                 variant={
                                   record.status === 'PRESENT'
                                     ? 'default'
-                                    : record.status === 'LATE'
-                                    ? 'secondary'
                                     : 'destructive'
                                 }
                               >
