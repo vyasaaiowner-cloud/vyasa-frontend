@@ -12,26 +12,29 @@ import { studentsApi } from '@/features/students/api';
 import { teachersApi } from '@/features/teachers/api';
 import { classesApi } from '@/features/classes/api';
 import { announcementsApi } from '@/features/announcements/api';
+import { getSchoolContext } from '@/lib/school-scope';
 
 export default function AdminDashboard() {
-  // Fetch real data from backend
+  const schoolId = getSchoolContext();
+
+  // Fetch real data from backend with school-scoped cache keys
   const { data: students, isLoading: studentsLoading } = useQuery({
-    queryKey: ['students'],
+    queryKey: ['students', schoolId],
     queryFn: () => studentsApi.getAll(),
   });
 
   const { data: teachers, isLoading: teachersLoading } = useQuery({
-    queryKey: ['teachers'],
+    queryKey: ['teachers', schoolId],
     queryFn: () => teachersApi.getAll(false),
   });
 
   const { data: classes, isLoading: classesLoading } = useQuery({
-    queryKey: ['classes'],
+    queryKey: ['classes', schoolId],
     queryFn: () => classesApi.getAll(),
   });
 
   const { data: announcements, isLoading: announcementsLoading } = useQuery({
-    queryKey: ['announcements'],
+    queryKey: ['announcements', schoolId],
     queryFn: () => announcementsApi.getAll(),
   });
 

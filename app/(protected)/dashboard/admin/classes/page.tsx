@@ -36,7 +36,7 @@ export default function ClassesManagementPage() {
   const createClassMutation = useMutation({
     mutationFn: (data: CreateClassDto) => classesApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['classes'] });
+      queryClient.invalidateQueries({ queryKey: ['classes', schoolId] });
       setIsCreateClassOpen(false);
       setClassFormData({ name: '' });
       toast.success('Class created successfully!');
@@ -78,7 +78,9 @@ export default function ClassesManagementPage() {
   const deleteClassMutation = useMutation({
     mutationFn: (id: string) => classesApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['classes'] });
+      queryClient.invalidateQueries({ queryKey: ['classes', schoolId] });
+      setDeleteConfirmOpen(false);
+      setClassToDelete(null);
       toast.success('Class deleted successfully!');
     },
     onError: (error: Error) => {
@@ -90,7 +92,7 @@ export default function ClassesManagementPage() {
   const deleteSectionMutation = useMutation({
     mutationFn: (id: string) => classesApi.deleteSection(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['classes'] });
+      queryClient.invalidateQueries({ queryKey: ['classes', schoolId] });
       toast.success('Section deleted successfully!');
     },
     onError: (error: Error) => {
@@ -109,7 +111,14 @@ export default function ClassesManagementPage() {
   };
 
   const handleDeleteClass = (id: string) => {
-    deleteClassMutation.mutate(id);
+    setClassToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (classToDelete) {
+      deleteClassMutation.mutate(classToDelete);
+    }
   };
 
   const handleDeleteSection = (id: string) => {
@@ -278,6 +287,36 @@ export default function ClassesManagementPage() {
             ))
           )}
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Class</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this class and all its sections? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-3 mt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  setClassToDelete(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={confirmDelete}
+                disabled={deleteClassMutation.isPending}
+              >
+                {deleteClassMutation.isPending ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </ErrorBoundary>
   );

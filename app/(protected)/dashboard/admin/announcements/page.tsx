@@ -17,12 +17,15 @@ import { classesApi } from '@/features/classes/api';
 import type { Announcement, CreateAnnouncementDto, UpdateAnnouncementDto } from '@/features/announcements/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { getSchoolContext } from '@/lib/school-scope';
 
 export default function AnnouncementsManagementPage() {
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [announcementToDelete, setAnnouncementToDelete] = useState<string | null>(null);
   const [formData, setFormData] = useState<CreateAnnouncementDto>({
     title: '',
     content: '',
@@ -31,15 +34,17 @@ export default function AnnouncementsManagementPage() {
     targetSection: '',
   });
 
-  // Fetch announcements
+  const schoolId = getSchoolContext();
+
+  // Fetch announcements with school-scoped cache key
   const { data: announcements = [], isLoading } = useQuery({
-    queryKey: ['announcements'],
+    queryKey: ['announcements', schoolId],
     queryFn: () => announcementsApi.getAll(),
   });
 
   // Fetch classes for targeting
   const { data: classes = [] } = useQuery({
-    queryKey: ['classes'],
+    queryKey: ['classes', schoolId],
     queryFn: () => classesApi.getAll(),
   });
 
@@ -47,7 +52,7 @@ export default function AnnouncementsManagementPage() {
   const createMutation = useMutation({
     mutationFn: (data: CreateAnnouncementDto) => announcementsApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      queryClient.invalidateQueries({ queryKey: ['announcements', schoolId] });
       setIsCreateOpen(false);
       resetForm();
       toast.success('Announcement created successfully!');
@@ -76,7 +81,9 @@ export default function AnnouncementsManagementPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => announcementsApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      queryClient.invalidateQueries({ queryKey: ['announcements', schoolId] });
+      setDeleteConfirmOpen(false);
+      setAnnouncementToDelete(null);
       toast.success('Announcement deleted successfully!');
     },
     onError: (error: Error) => {
@@ -131,7 +138,14 @@ export default function AnnouncementsManagementPage() {
   };
 
   const handleDelete = (id: string) => {
-    deleteMutation.mutate(id);
+    setAnnouncementToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (announcementToDelete) {
+      deleteMutation.mutate(announcementToDelete);
+    }
   };
 
   const getTargetBadge = (announcement: Announcement) => {
@@ -426,6 +440,36 @@ export default function AnnouncementsManagementPage() {
                 </Button>
               </DialogFooter>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Announcement</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this announcement? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-3 mt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  setAnnouncementToDelete(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

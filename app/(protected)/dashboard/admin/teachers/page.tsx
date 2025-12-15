@@ -15,11 +15,14 @@ import { TableSkeleton } from '@/components/skeletons';
 import { teachersApi } from '@/features/teachers/api';
 import type { Teacher, CreateTeacherDto, UpdateTeacherDto } from '@/features/teachers/types';
 import { toast } from 'sonner';
+import { getSchoolContext } from '@/lib/school-scope';
 
 export default function TeachersManagementPage() {
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [teacherToDelete, setTeacherToDelete] = useState<string | null>(null);
   const [formData, setFormData] = useState<CreateTeacherDto>({
     name: '',
     countryCode: '+91',
@@ -28,9 +31,11 @@ export default function TeachersManagementPage() {
     sectionIds: [],
   });
 
-  // Fetch teachers
+  const schoolId = getSchoolContext();
+
+  // Fetch teachers with school-scoped cache key
   const { data: teachers = [], isLoading } = useQuery({
-    queryKey: ['teachers'],
+    queryKey: ['teachers', schoolId],
     queryFn: () => teachersApi.getAll(false),
   });
 
@@ -38,7 +43,7 @@ export default function TeachersManagementPage() {
   const createMutation = useMutation({
     mutationFn: (data: CreateTeacherDto) => teachersApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teachers'] });
+      queryClient.invalidateQueries({ queryKey: ['teachers', schoolId] });
       setIsCreateOpen(false);
       resetForm();
       toast.success('Teacher created successfully!');
@@ -52,7 +57,9 @@ export default function TeachersManagementPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => teachersApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teachers'] });
+      queryClient.invalidateQueries({ queryKey: ['teachers', schoolId] });
+      setDeleteConfirmOpen(false);
+      setTeacherToDelete(null);
       toast.success('Teacher deleted successfully!');
     },
     onError: (error: Error) => {
@@ -65,7 +72,7 @@ export default function TeachersManagementPage() {
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
       isActive ? teachersApi.deactivate(id) : teachersApi.activate(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teachers'] });
+      queryClient.invalidateQueries({ queryKey: ['teachers', schoolId] });
     },
     onError: (error: Error) => {
       toast.error(`Failed to update teacher status: ${error.message}`);
@@ -85,11 +92,23 @@ export default function TeachersManagementPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createMutation.mutate(formData);
+    // Sanitize phone number before submission
+    const sanitizedData = {
+      ...formData,
+      mobileNo: formData.mobileNo.replace(/\D/g, ''),
+    };
+    createMutation.mutate(sanitizedData);
   };
 
   const handleDelete = (id: string) => {
-    deleteMutation.mutate(id);
+    setTeacherToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (teacherToDelete) {
+      deleteMutation.mutate(teacherToDelete);
+    }
   };
 
   return (
@@ -252,6 +271,36 @@ export default function TeachersManagementPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Teacher</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this teacher? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-3 mt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  setTeacherToDelete(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </ErrorBoundary>
   );

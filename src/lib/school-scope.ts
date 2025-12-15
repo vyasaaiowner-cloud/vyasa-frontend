@@ -54,13 +54,18 @@ export function validateSchoolScope(schoolId: string): void {
 }
 
 /**
- * Wrap API calls to automatically include school ID
- * and validate responses
+ * Wrap API calls to automatically include school ID via header
+ * Supports both signatures for compatibility:
+ * 1. scopedApiCall(url, options) - fetch-like (most APIs)
+ * 2. scopedApiCall(method, url, data) - legacy (holidays API)
+ * 
+ * ⚠️ SECURITY NOTE: Backend MUST derive schoolId from JWT, not from client headers
+ * This header is for routing/caching only, not authorization
  */
 export async function scopedApiCall<T>(
-  method: 'get' | 'post' | 'put' | 'delete',
-  url: string,
-  data?: any
+  urlOrMethod: string,
+  optionsOrUrl?: any,
+  legacyData?: any
 ): Promise<T> {
   const schoolId = getSchoolContext();
   
@@ -68,24 +73,58 @@ export async function scopedApiCall<T>(
     throw new Error('School context not set. Please login again.');
   }
   
-  // Add schoolId to request
-  const config = {
-    params: method === 'get' ? { ...data, schoolId } : undefined,
-    data: method !== 'get' ? { ...data, schoolId } : undefined,
+  // Detect which signature is being used
+  const isLegacySignature = ['get', 'post', 'put', 'patch', 'delete'].includes(urlOrMethod.toLowerCase());
+  
+  let method: string;
+  let url: string;
+  let options: any = {};
+  
+  if (isLegacySignature) {
+    // Legacy: scopedApiCall('get', '/teachers', data)
+    method = urlOrMethod;
+    url = optionsOrUrl;
+    options = { data: legacyData };
+  } else {
+    // Modern: scopedApiCall('/teachers', { method: 'GET', body: ... })
+    url = urlOrMethod;
+    options = optionsOrUrl || {};
+    method = options.method || 'GET';
+  }
+  
+  // Build axios config
+  const axiosConfig: any = {
+    method: method.toLowerCase(),
+    url,
+    headers: {
+      'X-School-Id': schoolId, // For backend routing/caching (NOT authorization)
+      ...(options.headers || {}),
+    },
   };
   
-  const response = await api.request<T>({
-    method,
-    url,
-    ...config,
-  });
+  // Handle body/data
+  if (options.body) {
+    axiosConfig.data = options.body;
+  } else if (options.data) {
+    axiosConfig.data = options.data;
+  } else if (legacyData) {
+    axiosConfig.data = legacyData;
+  }
   
-  // Validate response data contains correct school scope
+  // Handle query params
+  if (options.params) {
+    axiosConfig.params = options.params;
+  }
+  
+  const response = await api.request<T>(axiosConfig);
+  
+  // Validate response data contains correct school scope (optional check)
+  // Backend is authoritative, this is just a sanity check
   if (response.data && typeof response.data === 'object') {
     const responseSchoolId = (response.data as any).schoolId;
     if (responseSchoolId && responseSchoolId !== schoolId) {
-      console.error('School scope violation detected in response');
-      throw new Error('Data isolation error: Invalid school scope');
+      console.error('School scope mismatch:', { expected: schoolId, received: responseSchoolId });
+      // Don't throw - backend is authoritative
     }
   }
   

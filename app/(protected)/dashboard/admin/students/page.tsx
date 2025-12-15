@@ -16,12 +16,15 @@ import { classesApi } from '@/features/classes/api';
 import type { Student, CreateStudentDto, UpdateStudentDto } from '@/features/students/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { getSchoolContext } from '@/lib/school-scope';
 
 export default function StudentsManagementPage() {
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<string | null>(null);
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [selectedSection, setSelectedSection] = useState<string>('');
   const [formData, setFormData] = useState<CreateStudentDto>({
@@ -35,23 +38,31 @@ export default function StudentsManagementPage() {
     parentEmail: '',
   });
 
+  const schoolId = getSchoolContext();
+
   // Fetch classes for filter
   const { data: classes = [] } = useQuery({
-    queryKey: ['classes'],
+    queryKey: ['classes', schoolId],
     queryFn: () => classesApi.getAll(),
   });
 
-  // Fetch students
+  // Fetch students with school-scoped cache key
   const { data: students = [], isLoading } = useQuery({
-    queryKey: ['students', selectedClass, selectedSection],
+    queryKey: ['students', schoolId, selectedClass, selectedSection],
     queryFn: () => studentsApi.getAll(selectedClass || undefined, selectedSection || undefined),
   });
 
   // Create student mutation
   const createMutation = useMutation({
-    mutationFn: (data: CreateStudentDto) => studentsApi.create(data),
+    mutationFn: (data: CreateStudentDto) => {
+      // Sanitize phone number if provided
+      const sanitizedData = data.parentMobileNo
+        ? { ...data, parentMobileNo: data.parentMobileNo.replace(/\D/g, '') }
+        : data;
+      return studentsApi.create(sanitizedData);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] });
+      queryClient.invalidateQueries({ queryKey: ['students', schoolId] });
       setIsCreateOpen(false);
       resetForm();
       toast.success('Student created successfully!');
@@ -66,7 +77,7 @@ export default function StudentsManagementPage() {
     mutationFn: ({ id, data }: { id: string; data: UpdateStudentDto }) =>
       studentsApi.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] });
+      queryClient.invalidateQueries({ queryKey: ['students', schoolId] });
       setIsEditOpen(false);
       setEditingStudent(null);
       toast.success('Student updated successfully!');
@@ -80,7 +91,9 @@ export default function StudentsManagementPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => studentsApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] });
+      queryClient.invalidateQueries({ queryKey: ['students', schoolId] });
+      setDeleteConfirmOpen(false);
+      setStudentToDelete(null);
       toast.success('Student deleted successfully!');
     },
     onError: (error: Error) => {
@@ -126,7 +139,14 @@ export default function StudentsManagementPage() {
   };
 
   const handleDelete = (id: string) => {
-    deleteMutation.mutate(id);
+    setStudentToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (studentToDelete) {
+      deleteMutation.mutate(studentToDelete);
+    }
   };
 
   return (
@@ -409,6 +429,36 @@ export default function StudentsManagementPage() {
                 </Button>
               </DialogFooter>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Student</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this student? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-3 mt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  setStudentToDelete(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
