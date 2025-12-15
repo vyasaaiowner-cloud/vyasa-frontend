@@ -19,16 +19,21 @@ export default function VerifyOTPPage() {
 
   useEffect(() => {
     // Get stored data
-    const storedEmail = storage.getUserEmail();
+    const storedEmail = storage.getUserEmail() || '';
     if (typeof window !== 'undefined') {
-      const storedMobileNo = localStorage.getItem('pendingMobileNo');
-      const storedCountryCode = localStorage.getItem('pendingCountryCode');
+      const storedMobileNo = localStorage.getItem('pendingMobileNo') || '';
+      const storedCountryCode = localStorage.getItem('pendingCountryCode') || '';
       
-      if (!storedMobileNo || !storedCountryCode || !storedEmail) {
-        // No data stored, redirect to login
+      // Check if at least email OR mobile is provided
+      const hasEmail = storedEmail.length > 0;
+      const hasMobile = storedMobileNo.length > 0 && storedCountryCode.length > 0;
+      
+      if (!hasEmail && !hasMobile) {
+        // No contact method stored, redirect to login
         router.push('/auth/login');
         return;
       }
+      
       setEmail(storedEmail);
       setMobileNo(storedMobileNo);
       setCountryCode(storedCountryCode);
@@ -37,7 +42,11 @@ export default function VerifyOTPPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!mobileNo || !countryCode || !email) return;
+    // Allow submission if at least one method is present
+    const hasEmail = email.length > 0;
+    const hasMobile = mobileNo.length > 0 && countryCode.length > 0;
+    if (!hasEmail && !hasMobile) return;
+    
     verifyOTPMutation.mutate({ countryCode, mobileNo, otp, email });
   };
 
@@ -51,7 +60,11 @@ export default function VerifyOTPPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Verify OTP</CardTitle>
           <CardDescription>
-            Enter the 6-digit code sent to <strong>{countryCode} {mobileNo}</strong>
+            {mobileNo ? (
+              <>Enter the 6-digit code sent to <strong>{countryCode} {mobileNo}</strong></>
+            ) : (
+              <>Enter the 6-digit code sent to <strong>{email}</strong></>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
