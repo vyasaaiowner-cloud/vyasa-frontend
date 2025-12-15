@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { storage } from '@/lib/storage';
 
 interface User {
   id: string;
@@ -34,7 +35,7 @@ export function useAuth() {
   };
 
   const isAuthenticated = () => {
-    return !!localStorage.getItem('accessToken');
+    return !!storage.getToken();
   };
 
   return {

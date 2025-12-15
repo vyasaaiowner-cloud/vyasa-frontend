@@ -15,6 +15,7 @@ import { studentsApi } from '@/features/students/api';
 import { classesApi } from '@/features/classes/api';
 import type { Student, CreateStudentDto, UpdateStudentDto } from '@/features/students/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 export default function StudentsManagementPage() {
   const queryClient = useQueryClient();
@@ -53,10 +54,10 @@ export default function StudentsManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['students'] });
       setIsCreateOpen(false);
       resetForm();
-      alert('Student created successfully!');
+      toast.success('Student created successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to create student: ${error.message}`);
+      toast.error(`Failed to create student: ${error.message}`);
     },
   });
 
@@ -68,10 +69,10 @@ export default function StudentsManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['students'] });
       setIsEditOpen(false);
       setEditingStudent(null);
-      alert('Student updated successfully!');
+      toast.success('Student updated successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to update student: ${error.message}`);
+      toast.error(`Failed to update student: ${error.message}`);
     },
   });
 
@@ -80,10 +81,10 @@ export default function StudentsManagementPage() {
     mutationFn: (id: string) => studentsApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
-      alert('Student deleted successfully!');
+      toast.success('Student deleted successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to delete student: ${error.message}`);
+      toast.error(`Failed to delete student: ${error.message}`);
     },
   });
 
@@ -125,9 +126,7 @@ export default function StudentsManagementPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this student?')) {
-      deleteMutation.mutate(id);
-    }
+    deleteMutation.mutate(id);
   };
 
   return (

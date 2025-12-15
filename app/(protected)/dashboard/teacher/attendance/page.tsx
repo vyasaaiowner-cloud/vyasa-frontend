@@ -14,6 +14,7 @@ import { classesApi } from '@/features/classes/api';
 import { studentsApi } from '@/features/students/api';
 import { attendanceApi } from '@/features/attendance/api';
 import type { AttendanceStatus } from '@/features/attendance/types';
+import { toast } from 'sonner';
 
 export default function TeacherAttendancePage() {
   const queryClient = useQueryClient();
@@ -56,12 +57,12 @@ export default function TeacherAttendancePage() {
       });
     },
     onSuccess: () => {
-      alert('Attendance submitted successfully!');
+      toast.success('Attendance submitted successfully!');
       setAttendanceData({});
       queryClient.invalidateQueries({ queryKey: ['attendance'] });
     },
     onError: (error: Error) => {
-      alert(`Failed to submit attendance: ${error.message}`);
+      toast.error(`Failed to submit attendance: ${error.message}`);
     },
   });
 
@@ -92,13 +93,13 @@ export default function TeacherAttendancePage() {
 
   const handleSubmit = () => {
     if (!selectedSectionId) {
-      alert('Please select a class section');
+      toast.error('Please select a class section');
       return;
     }
 
     const allMarked = students.every(student => attendanceData[student.id]);
     if (!allMarked) {
-      alert('Please mark attendance for all students');
+      toast.error('Please mark attendance for all students');
       return;
     }
 

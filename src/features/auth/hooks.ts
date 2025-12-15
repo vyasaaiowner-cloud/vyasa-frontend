@@ -19,10 +19,7 @@ export function useRequestOTP() {
       storage.setUserEmail('');
       
       // Store mobile data for OTP verification
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('pendingMobileNo', variables.mobileNo);
-        localStorage.setItem('pendingCountryCode', variables.countryCode);
-      }
+      storage.setPendingMobile(variables.mobileNo, variables.countryCode);
       
       // Navigate to OTP verification
       router.push('/auth/verify-otp');
@@ -57,10 +54,7 @@ export function useVerifyOTP() {
       
       // Clear stored email and pending data
       storage.setUserEmail('');
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('pendingMobileNo');
-        localStorage.removeItem('pendingCountryCode');
-      }
+      storage.clearPendingMobile();
       
       // Redirect based on user role
       // Backend roles: SUPER_ADMIN, SCHOOL_ADMIN, TEACHER, PARENT

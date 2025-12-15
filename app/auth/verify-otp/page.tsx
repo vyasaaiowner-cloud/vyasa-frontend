@@ -20,8 +20,9 @@ export default function VerifyOTPPage() {
   useEffect(() => {
     // Get stored data
     const storedEmail = storage.getUserEmail() || '';
-    const storedMobileNo = (typeof window !== 'undefined') ? localStorage.getItem('pendingMobileNo') || '' : '';
-    const storedCountryCode = (typeof window !== 'undefined') ? localStorage.getItem('pendingCountryCode') || '' : '';
+    const pendingMobile = storage.getPendingMobile();
+    const storedMobileNo = pendingMobile?.mobileNo || '';
+    const storedCountryCode = pendingMobile?.countryCode || '';
     
     // Check if at least email OR mobile is provided
     const hasEmail = storedEmail.length > 0;

@@ -14,6 +14,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { TableSkeleton } from '@/components/skeletons';
 import { classesApi } from '@/features/classes/api';
 import type { Class, Section, CreateClassDto, CreateSectionDto, UpdateClassDto, UpdateSectionDto } from '@/features/classes/types';
+import { toast } from 'sonner';
 
 export default function ClassesManagementPage() {
   const queryClient = useQueryClient();
@@ -38,10 +39,10 @@ export default function ClassesManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['classes'] });
       setIsCreateClassOpen(false);
       setClassFormData({ name: '' });
-      alert('Class created successfully!');
+      toast.success('Class created successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to create class: ${error.message}`);
+      toast.error(`Failed to create class: ${error.message}`);
     },
   });
 
@@ -52,10 +53,10 @@ export default function ClassesManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['classes'] });
       setIsCreateSectionOpen(false);
       setSectionFormData({ name: '', classId: '' });
-      alert('Section created successfully!');
+      toast.success('Section created successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to create section: ${error.message}`);
+      toast.error(`Failed to create section: ${error.message}`);
     },
   });
 
@@ -66,10 +67,10 @@ export default function ClassesManagementPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['classes'] });
       setEditingClass(null);
-      alert('Class updated successfully!');
+      toast.success('Class updated successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to update class: ${error.message}`);
+      toast.error(`Failed to update class: ${error.message}`);
     },
   });
 
@@ -78,10 +79,10 @@ export default function ClassesManagementPage() {
     mutationFn: (id: string) => classesApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['classes'] });
-      alert('Class deleted successfully!');
+      toast.success('Class deleted successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to delete class: ${error.message}`);
+      toast.error(`Failed to delete class: ${error.message}`);
     },
   });
 
@@ -90,10 +91,10 @@ export default function ClassesManagementPage() {
     mutationFn: (id: string) => classesApi.deleteSection(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['classes'] });
-      alert('Section deleted successfully!');
+      toast.success('Section deleted successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to delete section: ${error.message}`);
+      toast.error(`Failed to delete section: ${error.message}`);
     },
   });
 
@@ -108,15 +109,11 @@ export default function ClassesManagementPage() {
   };
 
   const handleDeleteClass = (id: string) => {
-    if (confirm('Are you sure you want to delete this class? All sections will be deleted.')) {
-      deleteClassMutation.mutate(id);
-    }
+    deleteClassMutation.mutate(id);
   };
 
   const handleDeleteSection = (id: string) => {
-    if (confirm('Are you sure you want to delete this section?')) {
-      deleteSectionMutation.mutate(id);
-    }
+    deleteSectionMutation.mutate(id);
   };
 
   return (

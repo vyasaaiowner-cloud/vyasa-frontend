@@ -13,6 +13,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { TableSkeleton } from '@/components/skeletons';
 import { holidaysApi } from '@/features/holidays/api';
 import type { Holiday, CreateHolidayDto, UpdateHolidayDto } from '@/features/holidays/types';
+import { toast } from 'sonner';
 
 export default function HolidaysManagementPage() {
   const queryClient = useQueryClient();
@@ -37,10 +38,10 @@ export default function HolidaysManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['holidays'] });
       setIsCreateOpen(false);
       resetForm();
-      alert('Holiday created successfully!');
+      toast.success('Holiday created successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to create holiday: ${error.message}`);
+      toast.error(`Failed to create holiday: ${error.message}`);
     },
   });
 
@@ -52,10 +53,10 @@ export default function HolidaysManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['holidays'] });
       setIsEditOpen(false);
       setEditingHoliday(null);
-      alert('Holiday updated successfully!');
+      toast.success('Holiday updated successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to update holiday: ${error.message}`);
+      toast.error(`Failed to update holiday: ${error.message}`);
     },
   });
 
@@ -64,10 +65,10 @@ export default function HolidaysManagementPage() {
     mutationFn: (id: string) => holidaysApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['holidays'] });
-      alert('Holiday deleted successfully!');
+      toast.success('Holiday deleted successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to delete holiday: ${error.message}`);
+      toast.error(`Failed to delete holiday: ${error.message}`);
     },
   });
 
@@ -101,9 +102,7 @@ export default function HolidaysManagementPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this holiday?')) {
-      deleteMutation.mutate(id);
-    }
+    deleteMutation.mutate(id);
   };
 
   // Sort holidays by date

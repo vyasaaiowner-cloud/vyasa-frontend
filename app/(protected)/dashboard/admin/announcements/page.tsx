@@ -16,6 +16,7 @@ import { announcementsApi } from '@/features/announcements/api';
 import { classesApi } from '@/features/classes/api';
 import type { Announcement, CreateAnnouncementDto, UpdateAnnouncementDto } from '@/features/announcements/types';
 import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 
 export default function AnnouncementsManagementPage() {
   const queryClient = useQueryClient();
@@ -49,10 +50,10 @@ export default function AnnouncementsManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['announcements'] });
       setIsCreateOpen(false);
       resetForm();
-      alert('Announcement created successfully!');
+      toast.success('Announcement created successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to create announcement: ${error.message}`);
+      toast.error(`Failed to create announcement: ${error.message}`);
     },
   });
 
@@ -64,10 +65,10 @@ export default function AnnouncementsManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['announcements'] });
       setIsEditOpen(false);
       setEditingAnnouncement(null);
-      alert('Announcement updated successfully!');
+      toast.success('Announcement updated successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to update announcement: ${error.message}`);
+      toast.error(`Failed to update announcement: ${error.message}`);
     },
   });
 
@@ -76,10 +77,10 @@ export default function AnnouncementsManagementPage() {
     mutationFn: (id: string) => announcementsApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] });
-      alert('Announcement deleted successfully!');
+      toast.success('Announcement deleted successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to delete announcement: ${error.message}`);
+      toast.error(`Failed to delete announcement: ${error.message}`);
     },
   });
 
@@ -130,9 +131,7 @@ export default function AnnouncementsManagementPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this announcement?')) {
-      deleteMutation.mutate(id);
-    }
+    deleteMutation.mutate(id);
   };
 
   const getTargetBadge = (announcement: Announcement) => {

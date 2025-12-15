@@ -13,8 +13,7 @@ import { Plus, Pencil, Trash2, UserCheck, UserX } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TableSkeleton } from '@/components/skeletons';
 import { teachersApi } from '@/features/teachers/api';
-import type { Teacher, CreateTeacherDto, UpdateTeacherDto } from '@/features/teachers/types';
-
+import type { Teacher, CreateTeacherDto, UpdateTeacherDto } from '@/features/teachers/types';import { toast } from 'sonner';
 export default function TeachersManagementPage() {
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -40,10 +39,10 @@ export default function TeachersManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['teachers'] });
       setIsCreateOpen(false);
       resetForm();
-      alert('Teacher created successfully!');
+      toast.success('Teacher created successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to create teacher: ${error.message}`);
+      toast.error(`Failed to create teacher: ${error.message}`);
     },
   });
 
@@ -52,10 +51,10 @@ export default function TeachersManagementPage() {
     mutationFn: (id: string) => teachersApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teachers'] });
-      alert('Teacher deleted successfully!');
+      toast.success('Teacher deleted successfully!');
     },
     onError: (error: Error) => {
-      alert(`Failed to delete teacher: ${error.message}`);
+      toast.error(`Failed to delete teacher: ${error.message}`);
     },
   });
 
@@ -67,7 +66,7 @@ export default function TeachersManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['teachers'] });
     },
     onError: (error: Error) => {
-      alert(`Failed to update teacher status: ${error.message}`);
+      toast.error(`Failed to update teacher status: ${error.message}`);
     },
   });
 
@@ -88,9 +87,7 @@ export default function TeachersManagementPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this teacher?')) {
-      deleteMutation.mutate(id);
-    }
+    deleteMutation.mutate(id);
   };
 
   return (
