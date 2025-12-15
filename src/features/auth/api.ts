@@ -26,6 +26,7 @@ export interface VerifyOTPResponse {
     email: string;
     name: string;
     role: string;
+    schoolId?: string;
   };
 }
 

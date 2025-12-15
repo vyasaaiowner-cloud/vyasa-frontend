@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { requestOTP, verifyOTP, type RequestOTPParams, type VerifyOTPParams } from './api';
 import { storage } from '@/lib/storage';
+import { setSchoolContext, clearSchoolContext } from '@/lib/school-scope';
 
 /**
  * Hook for requesting OTP
@@ -38,10 +39,30 @@ export function useVerifyOTP() {
     onSuccess: (data) => {
       // Store access token
       storage.setToken(data.accessToken);
-      // Clear stored email
+      
+      // Set school context for data isolation
+      if (data.user.schoolId) {
+        setSchoolContext(data.user.schoolId);
+      }
+      
+      // Clear stored email and pending data
       storage.setUserEmail('');
-      // Redirect to dashboard
-      router.push('/dashboard');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('pendingMobileNo');
+        localStorage.removeItem('pendingCountryCode');
+      }
+      
+      // Redirect based on user role
+      const role = data.user.role?.toLowerCase();
+      if (role === 'admin') {
+        router.push('/dashboard/admin');
+      } else if (role === 'teacher') {
+        router.push('/dashboard/teacher/attendance');
+      } else if (role === 'parent') {
+        router.push('/dashboard/parent');
+      } else {
+        router.push('/dashboard');
+      }
     },
   });
 }
@@ -54,6 +75,8 @@ export function useLogout() {
 
   return () => {
     storage.clearAll();
+    clearSchoolContext();
     router.push('/auth/login');
   };
 }
+
