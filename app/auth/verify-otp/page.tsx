@@ -20,24 +20,22 @@ export default function VerifyOTPPage() {
   useEffect(() => {
     // Get stored data
     const storedEmail = storage.getUserEmail() || '';
-    if (typeof window !== 'undefined') {
-      const storedMobileNo = localStorage.getItem('pendingMobileNo') || '';
-      const storedCountryCode = localStorage.getItem('pendingCountryCode') || '';
-      
-      // Check if at least email OR mobile is provided
-      const hasEmail = storedEmail.length > 0;
-      const hasMobile = storedMobileNo.length > 0 && storedCountryCode.length > 0;
-      
-      if (!hasEmail && !hasMobile) {
-        // No contact method stored, redirect to login
-        router.push('/auth/login');
-        return;
-      }
-      
-      setEmail(storedEmail);
-      setMobileNo(storedMobileNo);
-      setCountryCode(storedCountryCode);
+    const storedMobileNo = (typeof window !== 'undefined') ? localStorage.getItem('pendingMobileNo') || '' : '';
+    const storedCountryCode = (typeof window !== 'undefined') ? localStorage.getItem('pendingCountryCode') || '' : '';
+    
+    // Check if at least email OR mobile is provided
+    const hasEmail = storedEmail.length > 0;
+    const hasMobile = storedMobileNo.length > 0 && storedCountryCode.length > 0;
+    
+    if (!hasEmail && !hasMobile) {
+      // No contact method stored, redirect to login
+      router.push('/auth/login');
+      return;
     }
+    
+    setEmail(storedEmail);
+    setMobileNo(storedMobileNo);
+    setCountryCode(storedCountryCode);
   }, [router]);
 
   const handleSubmit = (e: React.FormEvent) => {

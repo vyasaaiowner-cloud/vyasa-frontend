@@ -15,12 +15,22 @@ export function useRequestOTP() {
   return useMutation({
     mutationFn: (params: RequestOTPParams) => requestOTP(params),
     onSuccess: (data, variables) => {
-      // Store mobile number and country code for verify page
-      storage.setUserEmail(variables.email);
-      // Store additional data for OTP verification
+      // Store email only if email login method is used
+      if (variables.email) {
+        storage.setUserEmail(variables.email);
+      } else {
+        storage.setUserEmail(''); // Clear email if using mobile
+      }
+      
+      // Store mobile data only if mobile login method is used
       if (typeof window !== 'undefined') {
-        localStorage.setItem('pendingMobileNo', variables.mobileNo);
-        localStorage.setItem('pendingCountryCode', variables.countryCode);
+        if (variables.mobileNo && variables.countryCode) {
+          localStorage.setItem('pendingMobileNo', variables.mobileNo);
+          localStorage.setItem('pendingCountryCode', variables.countryCode);
+        } else {
+          localStorage.removeItem('pendingMobileNo');
+          localStorage.removeItem('pendingCountryCode');
+        }
       }
       // Navigate to OTP verification
       router.push('/auth/verify-otp');
