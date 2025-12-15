@@ -10,6 +10,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { TableSkeleton, StatCardsSkeleton } from '@/components/skeletons';
 import { attendanceApi } from '@/features/attendance/api';
 import { announcementsApi } from '@/features/announcements/api';
+import { HolidaysList } from '@/components/holidays-list';
 import type { AttendanceStatus } from '@/features/attendance/types';
 
 export default function ParentDashboard() {
@@ -68,6 +69,10 @@ export default function ParentDashboard() {
                   {announcements.length}
                 </Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger value="holidays" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Holidays
             </TabsTrigger>
           </TabsList>
 
@@ -225,6 +230,11 @@ export default function ParentDashboard() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Holidays Tab */}
+          <TabsContent value="holidays">
+            <HolidaysList />
           </TabsContent>
         </Tabs>
       </div>
