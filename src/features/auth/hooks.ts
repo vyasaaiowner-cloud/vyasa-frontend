@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { requestOTP, verifyOTP, type RequestOTPParams, type VerifyOTPParams } from './api';
+import { requestOTP, verifyOTP, decodeJWT, type RequestOTPParams, type VerifyOTPParams } from './api';
 import { storage } from '@/lib/storage';
 import { setSchoolContext, clearSchoolContext } from '@/lib/school-scope';
 
@@ -47,12 +47,20 @@ export function useVerifyOTP() {
   return useMutation({
     mutationFn: (params: VerifyOTPParams) => verifyOTP(params),
     onSuccess: (data) => {
+      // Validate response data
+      if (!data || !data.accessToken) {
+        throw new Error('Invalid response from server');
+      }
+
       // Store access token
       storage.setToken(data.accessToken);
       
+      // Decode JWT to extract user information
+      const userInfo = decodeJWT(data.accessToken);
+      
       // Set school context for data isolation
-      if (data.user.schoolId) {
-        setSchoolContext(data.user.schoolId);
+      if (userInfo.schoolId && userInfo.schoolId !== 'platform') {
+        setSchoolContext(userInfo.schoolId);
       }
       
       // Clear stored email and pending data
@@ -63,8 +71,8 @@ export function useVerifyOTP() {
       }
       
       // Redirect based on user role
-      const role = data.user.role?.toLowerCase();
-      if (role === 'admin') {
+      const role = userInfo.role?.toLowerCase();
+      if (role === 'super_admin' || role === 'admin') {
         router.push('/dashboard/admin');
       } else if (role === 'teacher') {
         router.push('/dashboard/teacher/attendance');
@@ -73,6 +81,9 @@ export function useVerifyOTP() {
       } else {
         router.push('/dashboard');
       }
+    },
+    onError: (error) => {
+      console.error('OTP verification failed:', error);
     },
   });
 }
