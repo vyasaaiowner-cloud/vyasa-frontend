@@ -71,15 +71,23 @@ export function useVerifyOTP() {
       }
       
       // Redirect based on user role
-      const role = userInfo.role?.toLowerCase();
-      if (role === 'super_admin' || role === 'admin') {
-        router.push('/dashboard/admin');
-      } else if (role === 'teacher') {
-        router.push('/dashboard/teacher/attendance');
-      } else if (role === 'parent') {
-        router.push('/dashboard/parent');
-      } else {
-        router.push('/dashboard');
+      // Backend roles: SUPER_ADMIN, SCHOOL_ADMIN, TEACHER, PARENT
+      const role = userInfo.role?.toUpperCase();
+      
+      switch (role) {
+        case 'SUPER_ADMIN':
+        case 'SCHOOL_ADMIN':
+          router.push('/dashboard/admin');
+          break;
+        case 'TEACHER':
+          router.push('/dashboard/teacher/attendance');
+          break;
+        case 'PARENT':
+          router.push('/dashboard/parent');
+          break;
+        default:
+          console.warn('Unknown role:', userInfo.role);
+          router.push('/dashboard');
       }
     },
     onError: (error) => {
