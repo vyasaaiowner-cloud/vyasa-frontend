@@ -194,15 +194,6 @@ export default function TeacherAttendancePage() {
                 <div className="text-2xl font-bold text-red-600">{stats.absent}</div>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Late</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-amber-600">{stats.late}</div>
-              </CardContent>
-            </Card>
           </div>
         )}
 
