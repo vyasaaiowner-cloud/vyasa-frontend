@@ -11,42 +11,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export default function VerifyOTPPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
   const [mobileNo, setMobileNo] = useState('');
   const [countryCode, setCountryCode] = useState('');
   const [otp, setOtp] = useState('');
   const verifyOTPMutation = useVerifyOTP();
 
   useEffect(() => {
-    // Get stored data
-    const storedEmail = storage.getUserEmail() || '';
+    // Get stored mobile data
     const pendingMobile = storage.getPendingMobile();
-    const storedMobileNo = pendingMobile?.mobileNo || '';
-    const storedCountryCode = pendingMobile?.countryCode || '';
     
-    // Check if at least email OR mobile is provided
-    const hasEmail = storedEmail.length > 0;
-    const hasMobile = storedMobileNo.length > 0 && storedCountryCode.length > 0;
-    
-    if (!hasEmail && !hasMobile) {
-      // No contact method stored, redirect to login
+    if (!pendingMobile || !pendingMobile.mobileNo || !pendingMobile.countryCode) {
+      // No mobile data stored, redirect to login
       router.push('/auth/login');
       return;
     }
     
-    setEmail(storedEmail);
-    setMobileNo(storedMobileNo);
-    setCountryCode(storedCountryCode);
+    setMobileNo(pendingMobile.mobileNo);
+    setCountryCode(pendingMobile.countryCode);
   }, [router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Allow submission if at least one method is present
-    const hasEmail = email.length > 0;
-    const hasMobile = mobileNo.length > 0 && countryCode.length > 0;
-    if (!hasEmail && !hasMobile) return;
+    // Mobile-only OTP (Phase 0)
+    if (!mobileNo || !countryCode) return;
     
-    verifyOTPMutation.mutate({ countryCode, mobileNo, otp, email });
+    verifyOTPMutation.mutate({ countryCode, mobileNo, otp });
   };
 
   const handleResendOTP = () => {
@@ -59,11 +48,7 @@ export default function VerifyOTPPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Verify OTP</CardTitle>
           <CardDescription>
-            {mobileNo ? (
-              <>Enter the 6-digit code sent to <strong>{countryCode} {mobileNo}</strong></>
-            ) : (
-              <>Enter the 6-digit code sent to <strong>{email}</strong></>
-            )}
+            Enter the 6-digit code sent to <strong>{countryCode} {mobileNo}</strong>
           </CardDescription>
         </CardHeader>
         <CardContent>

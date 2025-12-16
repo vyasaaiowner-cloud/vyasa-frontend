@@ -3,7 +3,6 @@ import api from '@/lib/api';
 export interface RequestOTPParams {
   countryCode: string;
   mobileNo: string;
-  email: string;
 }
 
 export interface RequestOTPResponse {
@@ -16,7 +15,6 @@ export interface VerifyOTPParams {
   countryCode: string;
   mobileNo: string;
   otp: string;
-  email: string;
 }
 
 export interface VerifyOTPResponse {

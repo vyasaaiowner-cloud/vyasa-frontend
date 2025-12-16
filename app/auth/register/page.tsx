@@ -15,7 +15,7 @@ export default function RegisterPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    requestOTPMutation.mutate({ email: '', countryCode, mobileNo });
+    requestOTPMutation.mutate({ countryCode, mobileNo });
   };
 
   return (
