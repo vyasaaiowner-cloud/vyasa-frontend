@@ -22,6 +22,8 @@ export default function ClassesManagementPage() {
   const [isCreateSectionOpen, setIsCreateSectionOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
   const [editingSection, setEditingSection] = useState<Section | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; type: 'class' | 'section' } | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [classFormData, setClassFormData] = useState<CreateClassDto>({ name: '' });
   const [sectionFormData, setSectionFormData] = useState<CreateSectionDto>({ name: '', classId: '' });
@@ -36,7 +38,7 @@ export default function ClassesManagementPage() {
   const createClassMutation = useMutation({
     mutationFn: (data: CreateClassDto) => classesApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['classes', schoolId] });
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
       setIsCreateClassOpen(false);
       setClassFormData({ name: '' });
       toast.success('Class created successfully!');
@@ -78,7 +80,7 @@ export default function ClassesManagementPage() {
   const deleteClassMutation = useMutation({
     mutationFn: (id: string) => classesApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['classes', schoolId] });
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
       setDeleteConfirmOpen(false);
       setClassToDelete(null);
       toast.success('Class deleted successfully!');
@@ -92,7 +94,7 @@ export default function ClassesManagementPage() {
   const deleteSectionMutation = useMutation({
     mutationFn: (id: string) => classesApi.deleteSection(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['classes', schoolId] });
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
       toast.success('Section deleted successfully!');
     },
     onError: (error: Error) => {

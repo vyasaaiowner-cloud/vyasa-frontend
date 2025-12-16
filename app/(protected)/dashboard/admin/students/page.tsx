@@ -29,8 +29,8 @@ export default function StudentsManagementPage() {
   const [selectedSection, setSelectedSection] = useState<string>('');
   const [formData, setFormData] = useState<CreateStudentDto>({
     name: '',
-    className: '',
-    section: '',
+    classId: '',
+    sectionId: '',
     rollNo: 1,
     parentName: '',
     parentCountryCode: '+91',
@@ -104,8 +104,8 @@ export default function StudentsManagementPage() {
   const resetForm = () => {
     setFormData({
       name: '',
-      className: '',
-      section: '',
+      classId: '',
+      sectionId: '',
       rollNo: 1,
       parentName: '',
       parentCountryCode: '+91',
@@ -130,8 +130,6 @@ export default function StudentsManagementPage() {
     
     const updateData: UpdateStudentDto = {
       name: editingStudent.name,
-      className: editingStudent.className,
-      section: editingStudent.section,
       rollNo: editingStudent.rollNo,
     };
     
@@ -183,24 +181,45 @@ export default function StudentsManagementPage() {
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="space-y-2">
-                      <Label htmlFor="className">Class</Label>
-                      <Input
-                        id="className"
-                        value={formData.className}
-                        onChange={(e) => setFormData({ ...formData, className: e.target.value })}
-                        placeholder="Class 5"
+                      <Label htmlFor="classId">Class *</Label>
+                      <Select
+                        value={formData.classId}
+                        onValueChange={(value) => setFormData({ ...formData, classId: value, sectionId: '' })}
                         required
-                      />
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select class" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {classes.map((cls) => (
+                            <SelectItem key={cls.id} value={cls.id}>
+                              {cls.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="section">Section</Label>
-                      <Input
-                        id="section"
-                        value={formData.section}
-                        onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                        placeholder="A"
+                      <Label htmlFor="sectionId">Section *</Label>
+                      <Select
+                        value={formData.sectionId}
+                        onValueChange={(value) => setFormData({ ...formData, sectionId: value })}
+                        disabled={!formData.classId}
                         required
-                      />
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select section" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {classes
+                            .find((c) => c.id === formData.classId)
+                            ?.sections.map((section) => (
+                              <SelectItem key={section.id} value={section.id}>
+                                {section.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="rollNo">Roll No</Label>
@@ -239,7 +258,7 @@ export default function StudentsManagementPage() {
                           <Input
                             id="parentCode"
                             value={formData.parentCountryCode}
-                            onChange={(e) => setFormData({ ...formData, parentCountryCode: e.target.value })}
+                            onChange={(e) => setFormData({ ...formData, parentCountryCode: e.target.value.trim() })}
                           />
                         </div>
                         <div className="col-span-2 space-y-2">
@@ -334,8 +353,8 @@ export default function StudentsManagementPage() {
                     <TableRow key={student.id}>
                       <TableCell className="font-medium">{student.rollNo}</TableCell>
                       <TableCell>{student.name}</TableCell>
-                      <TableCell>{student.className}</TableCell>
-                      <TableCell>{student.section}</TableCell>
+                      <TableCell>{student.class.name}</TableCell>
+                      <TableCell>{student.section.name}</TableCell>
                       <TableCell>
                         {student.parents && student.parents.length > 0 ? (
                           <div className="text-sm">
@@ -395,17 +414,17 @@ export default function StudentsManagementPage() {
                     <div className="space-y-2">
                       <Label>Class</Label>
                       <Input
-                        value={editingStudent.className}
-                        onChange={(e) => setEditingStudent({ ...editingStudent, className: e.target.value })}
-                        required
+                        value={editingStudent.class.name}
+                        disabled
+                        className="bg-slate-50"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label>Section</Label>
                       <Input
-                        value={editingStudent.section}
-                        onChange={(e) => setEditingStudent({ ...editingStudent, section: e.target.value })}
-                        required
+                        value={editingStudent.section.name}
+                        disabled
+                        className="bg-slate-50"
                       />
                     </div>
                     <div className="space-y-2">

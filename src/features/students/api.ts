@@ -4,12 +4,12 @@ import type { Student, CreateStudentDto, UpdateStudentDto, BulkUploadResult } fr
 export const studentsApi = {
   /**
    * Get all students for the current school
-   * Optionally filter by className and section
+   * Optionally filter by classId and sectionId
    */
-  getAll: async (className?: string, section?: string): Promise<Student[]> => {
+  getAll: async (classId?: string, sectionId?: string): Promise<Student[]> => {
     const params = new URLSearchParams();
-    if (className) params.append('className', className);
-    if (section) params.append('section', section);
+    if (classId) params.append('classId', classId);
+    if (sectionId) params.append('sectionId', sectionId);
     
     const query = params.toString();
     return scopedApiCall(
@@ -33,7 +33,7 @@ export const studentsApi = {
   create: async (data: CreateStudentDto): Promise<Student> => {
     return scopedApiCall('/students', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: data,
     });
   },
 
@@ -43,7 +43,7 @@ export const studentsApi = {
   update: async (id: string, data: UpdateStudentDto): Promise<Student> => {
     return scopedApiCall(`/students/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify(data),
+      body: data,
     });
   },
 

@@ -8,8 +8,7 @@ export interface StudentAttendanceDto {
 }
 
 export interface MarkAttendanceDto {
-  className: string;
-  section: string;
+  sectionId: string;
   date: string; // ISO date string
   attendances: StudentAttendanceDto[];
 }
@@ -17,8 +16,7 @@ export interface MarkAttendanceDto {
 export interface MarkAttendanceResponse {
   message: string;
   date: string;
-  className: string;
-  section: string;
+  sectionId: string;
   count: number;
 }
 

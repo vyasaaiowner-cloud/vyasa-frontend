@@ -13,7 +13,7 @@ export const attendanceApi = {
   mark: async (data: MarkAttendanceDto): Promise<MarkAttendanceResponse> => {
     return scopedApiCall('/attendance/mark', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: data,
     });
   },
 

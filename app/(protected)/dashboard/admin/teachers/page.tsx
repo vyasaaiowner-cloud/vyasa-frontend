@@ -8,11 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Pencil, Trash2, UserCheck, UserX } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TableSkeleton } from '@/components/skeletons';
 import { teachersApi } from '@/features/teachers/api';
+import { classesApi } from '@/features/classes/api';
 import type { Teacher, CreateTeacherDto, UpdateTeacherDto } from '@/features/teachers/types';
 import { toast } from 'sonner';
 import { getSchoolContext } from '@/lib/school-scope';
@@ -20,9 +22,11 @@ import { getSchoolContext } from '@/lib/school-scope';
 export default function TeachersManagementPage() {
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState<string | null>(null);
+  const [selectedSections, setSelectedSections] = useState<string[]>([]);
   const [formData, setFormData] = useState<CreateTeacherDto>({
     name: '',
     countryCode: '+91',
@@ -39,6 +43,12 @@ export default function TeachersManagementPage() {
     queryFn: () => teachersApi.getAll(false),
   });
 
+  // Fetch classes with sections for assignment
+  const { data: classes = [] } = useQuery({
+    queryKey: ['classes', schoolId],
+    queryFn: () => classesApi.getAll(),
+  });
+
   // Create teacher mutation
   const createMutation = useMutation({
     mutationFn: (data: CreateTeacherDto) => teachersApi.create(data),
@@ -50,6 +60,22 @@ export default function TeachersManagementPage() {
     },
     onError: (error: Error) => {
       toast.error(`Failed to create teacher: ${error.message}`);
+    },
+  });
+
+  // Update teacher sections mutation
+  const updateSectionsMutation = useMutation({
+    mutationFn: ({ id, sectionIds }: { id: string; sectionIds: string[] }) =>
+      teachersApi.update(id, { sectionIds }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teachers', schoolId] });
+      setIsAssignOpen(false);
+      setEditingTeacher(null);
+      setSelectedSections([]);
+      toast.success('Teacher sections updated successfully!');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update teacher sections: ${error.message}`);
     },
   });
 
@@ -111,6 +137,29 @@ export default function TeachersManagementPage() {
     }
   };
 
+  const handleAssignSections = (teacher: Teacher) => {
+    setEditingTeacher(teacher);
+    setSelectedSections(teacher.assignments.map(a => a.sectionId));
+    setIsAssignOpen(true);
+  };
+
+  const handleSectionToggle = (sectionId: string) => {
+    setSelectedSections(prev =>
+      prev.includes(sectionId)
+        ? prev.filter(id => id !== sectionId)
+        : [...prev, sectionId]
+    );
+  };
+
+  const handleUpdateSections = () => {
+    if (editingTeacher) {
+      updateSectionsMutation.mutate({
+        id: editingTeacher.id,
+        sectionIds: selectedSections,
+      });
+    }
+  };
+
   return (
     <ErrorBoundary>
       <div className="space-y-6">
@@ -158,7 +207,7 @@ export default function TeachersManagementPage() {
                       <Input
                         id="countryCode"
                         value={formData.countryCode}
-                        onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, countryCode: e.target.value.trim() })}
                         required
                       />
                     </div>

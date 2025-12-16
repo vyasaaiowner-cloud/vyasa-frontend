@@ -62,6 +62,8 @@ export function useVerifyOTP() {
       
       switch (role) {
         case 'SUPER_ADMIN':
+          router.push('/dashboard/super-admin');
+          break;
         case 'SCHOOL_ADMIN':
           router.push('/dashboard/admin');
           break;

@@ -10,38 +10,47 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TableSkeleton } from '@/components/skeletons';
-import { classesApi } from '@/features/classes/api';
+import { teachersApi } from '@/features/teachers/api';
 import { studentsApi } from '@/features/students/api';
 import { attendanceApi } from '@/features/attendance/api';
 import type { AttendanceStatus } from '@/features/attendance/types';
 import { toast } from 'sonner';
+import { getSchoolContext } from '@/lib/school-scope';
 
 export default function TeacherAttendancePage() {
   const queryClient = useQueryClient();
   const [selectedSectionId, setSelectedSectionId] = useState<string>('');
-  const [selectedClassName, setSelectedClassName] = useState<string>('');
-  const [selectedSection, setSelectedSection] = useState<string>('');
   const [attendanceData, setAttendanceData] = useState<Record<string, AttendanceStatus>>({});
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const schoolId = getSchoolContext();
 
-  // Fetch all sections
-  const { data: sections = [], isLoading: sectionsLoading } = useQuery({
-    queryKey: ['sections'],
-    queryFn: () => classesApi.getSections(),
+  // Fetch current teacher's data to get assigned sections
+  const { data: teachers = [], isLoading: teachersLoading } = useQuery({
+    queryKey: ['teachers', schoolId],
+    queryFn: () => teachersApi.getAll(false),
   });
 
-  // Fetch students for selected class/section
+  // Get current teacher (first teacher - in real app, this should be from auth context)
+  const currentTeacher = teachers[0];
+
+  // Get assigned sections from teacher's assignments
+  const assignedSections = currentTeacher?.assignments.map(a => a.section) || [];
+
+  // Get selected section details
+  const selectedSection = assignedSections.find(s => s.id === selectedSectionId);
+
+  // Fetch students for selected section
   const { data: students = [], isLoading: studentsLoading } = useQuery({
-    queryKey: ['students', selectedClassName, selectedSection],
-    queryFn: () => studentsApi.getAll(selectedClassName, selectedSection),
-    enabled: !!selectedClassName && !!selectedSection,
+    queryKey: ['students', selectedSection?.classId, selectedSectionId],
+    queryFn: () => studentsApi.getAll(selectedSection?.classId, selectedSectionId),
+    enabled: !!selectedSectionId && !!selectedSection?.classId,
   });
 
   // Submit attendance mutation
   const submitAttendanceMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedClassName || !selectedSection) {
-        throw new Error('Class and section must be selected');
+      if (!selectedSectionId) {
+        throw new Error('Section must be selected');
       }
 
       const attendances = students.map(student => ({
@@ -50,8 +59,7 @@ export default function TeacherAttendancePage() {
       }));
 
       return attendanceApi.mark({
-        className: selectedClassName,
-        section: selectedSection,
+        sectionId: selectedSectionId,
         date,
         attendances,
       });
@@ -68,12 +76,7 @@ export default function TeacherAttendancePage() {
 
   const handleSectionChange = (sectionId: string) => {
     setSelectedSectionId(sectionId);
-    const section = sections.find(s => s.id === sectionId);
-    if (section) {
-      setSelectedClassName(section.class?.name || '');
-      setSelectedSection(section.name);
-      setAttendanceData({});
-    }
+    setAttendanceData({});
   };
 
   const handleAttendanceChange = (studentId: string, status: AttendanceStatus) => {
@@ -134,15 +137,17 @@ export default function TeacherAttendancePage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Class Section</label>
-                {sectionsLoading ? (
+                {teachersLoading ? (
                   <p className="text-sm text-slate-500">Loading sections...</p>
+                ) : assignedSections.length === 0 ? (
+                  <p className="text-sm text-slate-500">You are not assigned to any sections</p>
                 ) : (
                   <Select value={selectedSectionId} onValueChange={handleSectionChange}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a section" />
                     </SelectTrigger>
                     <SelectContent>
-                      {sections.map(section => (
+                      {assignedSections.map(section => (
                         <SelectItem key={section.id} value={section.id}>
                           {section.class?.name} - Section {section.name}
                         </SelectItem>

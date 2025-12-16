@@ -1,8 +1,8 @@
 // Student types matching backend DTOs
 export interface CreateStudentDto {
   name: string;
-  className: string;
-  section: string;
+  classId: string;
+  sectionId: string;
   rollNo: number;
   parentName?: string;
   parentCountryCode?: string;
@@ -12,20 +12,35 @@ export interface CreateStudentDto {
 
 export interface UpdateStudentDto {
   name?: string;
-  className?: string;
-  section?: string;
+  classId?: string;
+  sectionId?: string;
   rollNo?: number;
 }
 
 export interface Student {
   id: string;
   name: string;
-  className: string;
-  section: string;
+  classId: string;
+  sectionId: string;
   rollNo: number;
   schoolId: string;
   createdAt: string;
   updatedAt: string;
+  class: {
+    id: string;
+    name: string;
+    schoolId: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  section: {
+    id: string;
+    name: string;
+    classId: string;
+    schoolId: string;
+    createdAt: string;
+    updatedAt: string;
+  };
   parents?: ParentLink[];
 }
 

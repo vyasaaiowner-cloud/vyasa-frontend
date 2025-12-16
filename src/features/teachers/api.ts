@@ -29,7 +29,7 @@ export const teachersApi = {
   create: async (data: CreateTeacherDto): Promise<Teacher> => {
     return scopedApiCall('/teachers', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: data,
     });
   },
 
@@ -39,7 +39,7 @@ export const teachersApi = {
   update: async (id: string, data: UpdateTeacherDto): Promise<Teacher> => {
     return scopedApiCall(`/teachers/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify(data),
+      body: data,
     });
   },
 

@@ -97,6 +97,7 @@ export async function scopedApiCall<T>(
     method: method.toLowerCase(),
     url,
     headers: {
+      'Content-Type': 'application/json',
       'X-School-Id': schoolId, // For backend routing/caching (NOT authorization)
       ...(options.headers || {}),
     },

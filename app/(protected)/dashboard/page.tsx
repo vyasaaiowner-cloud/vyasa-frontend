@@ -1,24 +1,56 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { storage } from '@/lib/storage';
+import { decodeJWT } from '@/features/auth';
+
+/**
+ * Dashboard Auto-Router
+ * Redirects users to their role-specific dashboard
+ */
 export default function DashboardPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = storage.getToken();
+    if (!token) {
+      router.push('/auth/login');
+      return;
+    }
+
+    try {
+      const userInfo = decodeJWT(token);
+      const role = userInfo.role?.toUpperCase();
+
+      switch (role) {
+        case 'SUPER_ADMIN':
+          router.replace('/dashboard/super-admin');
+          break;
+        case 'SCHOOL_ADMIN':
+          router.replace('/dashboard/admin');
+          break;
+        case 'TEACHER':
+          router.replace('/dashboard/teacher/attendance');
+          break;
+        case 'PARENT':
+          router.replace('/dashboard/parent');
+          break;
+        default:
+          console.error('Unknown role:', userInfo.role);
+          router.replace('/auth/login');
+      }
+    } catch (error) {
+      console.error('Failed to decode token:', error);
+      router.push('/auth/login');
+    }
+  }, [router]);
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-slate-600">Welcome to your Vyasa dashboard</p>
-      </div>
-      
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-lg border bg-white p-6">
-          <h3 className="font-semibold">Students</h3>
-          <p className="mt-2 text-3xl font-bold">0</p>
-        </div>
-        <div className="rounded-lg border bg-white p-6">
-          <h3 className="font-semibold">Classes</h3>
-          <p className="mt-2 text-3xl font-bold">0</p>
-        </div>
-        <div className="rounded-lg border bg-white p-6">
-          <h3 className="font-semibold">Assignments</h3>
-          <p className="mt-2 text-3xl font-bold">0</p>
-        </div>
+    <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="text-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900 mx-auto mb-4"></div>
+        <p className="text-slate-600">Redirecting to your dashboard...</p>
       </div>
     </div>
   );

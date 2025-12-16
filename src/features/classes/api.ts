@@ -8,7 +8,7 @@ export const classesApi = {
    * Get all classes for the current school
    */
   getAll: async (): Promise<Class[]> => {
-    return scopedApiCall('/schools/classes', {
+    return scopedApiCall('/classes', {
       method: 'GET',
     });
   },
@@ -17,7 +17,7 @@ export const classesApi = {
    * Get a single class by ID
    */
   getById: async (id: string): Promise<Class> => {
-    return scopedApiCall(`/schools/classes/${id}`, {
+    return scopedApiCall(`/classes/${id}`, {
       method: 'GET',
     });
   },
@@ -26,9 +26,9 @@ export const classesApi = {
    * Create a new class
    */
   create: async (data: CreateClassDto): Promise<Class> => {
-    return scopedApiCall('/schools/classes', {
+    return scopedApiCall('/classes', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: data,
     });
   },
 
@@ -36,9 +36,9 @@ export const classesApi = {
    * Update a class
    */
   update: async (id: string, data: UpdateClassDto): Promise<Class> => {
-    return scopedApiCall(`/schools/classes/${id}`, {
+    return scopedApiCall(`/classes/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify(data),
+      body: data,
     });
   },
 
@@ -46,7 +46,7 @@ export const classesApi = {
    * Delete a class
    */
   delete: async (id: string): Promise<{ message: string }> => {
-    return scopedApiCall(`/schools/classes/${id}`, {
+    return scopedApiCall(`/classes/${id}`, {
       method: 'DELETE',
     });
   },
@@ -59,7 +59,7 @@ export const classesApi = {
    */
   getSections: async (classId?: string): Promise<Section[]> => {
     const query = classId ? `?classId=${classId}` : '';
-    return scopedApiCall(`/schools/sections${query}`, {
+    return scopedApiCall(`/sections${query}`, {
       method: 'GET',
     });
   },
@@ -68,7 +68,7 @@ export const classesApi = {
    * Get a single section by ID
    */
   getSectionById: async (id: string): Promise<Section> => {
-    return scopedApiCall(`/schools/sections/${id}`, {
+    return scopedApiCall(`/sections/${id}`, {
       method: 'GET',
     });
   },
@@ -77,9 +77,9 @@ export const classesApi = {
    * Create a new section
    */
   createSection: async (data: CreateSectionDto): Promise<Section> => {
-    return scopedApiCall('/schools/sections', {
+    return scopedApiCall('/sections', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: data,
     });
   },
 
@@ -87,9 +87,9 @@ export const classesApi = {
    * Update a section
    */
   updateSection: async (id: string, data: UpdateSectionDto): Promise<Section> => {
-    return scopedApiCall(`/schools/sections/${id}`, {
+    return scopedApiCall(`/sections/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify(data),
+      body: data,
     });
   },
 
@@ -97,7 +97,7 @@ export const classesApi = {
    * Delete a section
    */
   deleteSection: async (id: string): Promise<{ message: string }> => {
-    return scopedApiCall(`/schools/sections/${id}`, {
+    return scopedApiCall(`/sections/${id}`, {
       method: 'DELETE',
     });
   },

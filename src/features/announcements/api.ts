@@ -27,7 +27,7 @@ export const announcementsApi = {
   create: async (data: CreateAnnouncementDto): Promise<Announcement> => {
     return scopedApiCall('/announcements', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: data,
     });
   },
 
@@ -37,7 +37,7 @@ export const announcementsApi = {
   update: async (id: string, data: UpdateAnnouncementDto): Promise<Announcement> => {
     return scopedApiCall(`/announcements/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify(data),
+      body: data,
     });
   },
 

@@ -1,23 +1,52 @@
 'use client';
 
 import { useEffect, useState, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { storage } from '@/lib/storage';
-import { useLogout, getCurrentUser } from '@/features/auth';
+import { useLogout, getCurrentUser, decodeJWT } from '@/features/auth';
+import { Badge } from '@/components/ui/badge';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { generateBreadcrumbs, getCustomBreadcrumbs } from '@/lib/breadcrumbs';
+import { ChevronRight } from 'lucide-react';
+import { SidebarNav } from '@/components/sidebar-nav';
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const logout = useLogout();
   const [shouldValidate, setShouldValidate] = useState(false);
+  const [userInfo, setUserInfo] = useState<{
+    role: string;
+    schoolId: string;
+    name?: string;
+  } | null>(null);
 
-  // Check if token exists before attempting to validate
+  // Check if token exists and decode it
   useEffect(() => {
     const token = storage.getToken();
     if (!token) {
       router.push('/auth/login');
     } else {
-      setShouldValidate(true);
+      try {
+        const decoded = decodeJWT(token);
+        setUserInfo({
+          role: decoded.role,
+          schoolId: decoded.schoolId,
+        });
+        setShouldValidate(true);
+      } catch (error) {
+        console.error('Failed to decode token:', error);
+        router.push('/auth/login');
+      }
     }
   }, [router]);
 
@@ -49,19 +78,65 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
   }
 
   // Don't render if no user data
-  if (!user) {
+  if (!user || !userInfo) {
     return null;
   }
+
+  // Determine display name and badge based on role
+  const getHeaderInfo = () => {
+    switch (userInfo.role) {
+      case 'SUPER_ADMIN':
+        return {
+          title: 'Vyasa Admin',
+          badge: 'Platform Admin',
+          badgeVariant: 'default' as const,
+        };
+      case 'SCHOOL_ADMIN':
+        return {
+          title: user.school?.name || 'School Admin',
+          badge: 'School Admin',
+          badgeVariant: 'secondary' as const,
+        };
+      case 'TEACHER':
+        return {
+          title: user.school?.name || 'Teacher Portal',
+          badge: 'Teacher',
+          badgeVariant: 'outline' as const,
+        };
+      case 'PARENT':
+        return {
+          title: user.school?.name || 'Parent Portal',
+          badge: 'Parent',
+          badgeVariant: 'outline' as const,
+        };
+      default:
+        return {
+          title: 'Vyasa',
+          badge: 'User',
+          badgeVariant: 'outline' as const,
+        };
+    }
+  };
+
+  const headerInfo = getHeaderInfo();
+
+  // Generate breadcrumbs
+  const breadcrumbs = getCustomBreadcrumbs(pathname) || generateBreadcrumbs(pathname);
+  const showBreadcrumbs = breadcrumbs.length > 1; // Only show if more than just Dashboard
 
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b bg-white">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <h1 className="text-xl font-bold">Vyasa</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold">{headerInfo.title}</h1>
+            <Badge variant={headerInfo.badgeVariant}>{headerInfo.badge}</Badge>
+          </div>
           <nav className="flex items-center gap-4">
-            <a href="/dashboard" className="text-sm text-slate-600 hover:text-slate-900">
+            <span className="text-sm text-slate-600">{user.name}</span>
+            <Link href="/dashboard" className="text-sm text-slate-600 hover:text-slate-900">
               Dashboard
-            </a>
+            </Link>
             <button
               onClick={logout}
               className="text-sm text-slate-600 hover:text-slate-900"
@@ -70,8 +145,51 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
             </button>
           </nav>
         </div>
+        
+        {/* Breadcrumbs */}
+        {showBreadcrumbs && (
+          <div className="border-t bg-slate-50">
+            <div className="container mx-auto px-4 py-2">
+              <Breadcrumb>
+                <BreadcrumbList>
+                  {breadcrumbs.map((crumb, index) => {
+                    const isLast = index === breadcrumbs.length - 1;
+                    
+                    return (
+                      <div key={crumb.href} className="flex items-center">
+                        <BreadcrumbItem>
+                          {isLast ? (
+                            <BreadcrumbPage className="font-medium">
+                              {crumb.label}
+                            </BreadcrumbPage>
+                          ) : (
+                            <BreadcrumbLink asChild>
+                              <Link href={crumb.href} className="text-slate-600 hover:text-slate-900">
+                                {crumb.label}
+                              </Link>
+                            </BreadcrumbLink>
+                          )}
+                        </BreadcrumbItem>
+                        {!isLast && (
+                          <BreadcrumbSeparator>
+                            <ChevronRight className="h-4 w-4" />
+                          </BreadcrumbSeparator>
+                        )}
+                      </div>
+                    );
+                  })}
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+          </div>
+        )}
       </header>
-      <main className="container mx-auto p-4">{children}</main>
+      
+      {/* Main Layout with Sidebar */}
+      <div className="flex">
+        <SidebarNav userRole={userInfo.role} />
+        <main className="flex-1 container mx-auto p-4 md:p-6">{children}</main>
+      </div>
     </div>
   );
 }
