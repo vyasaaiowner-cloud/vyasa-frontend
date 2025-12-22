@@ -33,7 +33,7 @@ export interface AttendanceRecord {
     name: string;
     rollNo: number;
     className?: string;  // For backward compatibility
-    section?: string;    // For backward compatibility
+    sectionName?: string;    // For backward compatibility
     class?: {            // Actual API response structure
       name: string;
     };

@@ -82,7 +82,7 @@ export default function ClassesManagementPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['classes'] });
       setDeleteConfirmOpen(false);
-      setClassToDelete(null);
+      setItemToDelete(null);
       toast.success('Class deleted successfully!');
     },
     onError: (error: Error) => {
@@ -113,13 +113,13 @@ export default function ClassesManagementPage() {
   };
 
   const handleDeleteClass = (id: string) => {
-    setClassToDelete(id);
+    setItemToDelete({ id, type: 'class' });
     setDeleteConfirmOpen(true);
   };
 
   const confirmDelete = () => {
-    if (classToDelete) {
-      deleteClassMutation.mutate(classToDelete);
+    if (itemToDelete && itemToDelete.type === 'class') {
+      deleteClassMutation.mutate(itemToDelete.id);
     }
   };
 
@@ -304,7 +304,7 @@ export default function ClassesManagementPage() {
                 variant="outline" 
                 onClick={() => {
                   setDeleteConfirmOpen(false);
-                  setClassToDelete(null);
+                  setItemToDelete(null);
                 }}
               >
                 Cancel
