@@ -13,7 +13,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { TableSkeleton } from '@/components/skeletons';
 import { holidaysApi } from '@/features/holidays/api';
 import type { Holiday, CreateHolidayDto, UpdateHolidayDto } from '@/features/holidays/types';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 export default function HolidaysManagementPage() {
   const queryClient = useQueryClient();
@@ -40,8 +40,8 @@ export default function HolidaysManagementPage() {
       resetForm();
       toast.success('Holiday created successfully!');
     },
-    onError: (error: Error) => {
-      toast.error(`Failed to create holiday: ${error.message}`);
+    onError: (error) => {
+      toast.error(error);
     },
   });
 
@@ -55,8 +55,8 @@ export default function HolidaysManagementPage() {
       setEditingHoliday(null);
       toast.success('Holiday updated successfully!');
     },
-    onError: (error: Error) => {
-      toast.error(`Failed to update holiday: ${error.message}`);
+    onError: (error) => {
+      toast.error(error);
     },
   });
 
@@ -67,8 +67,8 @@ export default function HolidaysManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['holidays'] });
       toast.success('Holiday deleted successfully!');
     },
-    onError: (error: Error) => {
-      toast.error(`Failed to delete holiday: ${error.message}`);
+    onError: (error) => {
+      toast.error(error);
     },
   });
 

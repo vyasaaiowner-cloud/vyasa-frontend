@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { extractErrorMessage } from '@/lib/error-handler';
 
 export interface RequestOTPParams {
   countryCode: string;
@@ -35,8 +36,13 @@ export interface JWTPayload {
  * Request OTP to be sent to user's phone
  */
 export async function requestOTP(params: RequestOTPParams): Promise<RequestOTPResponse> {
-  const response = await api.post<RequestOTPResponse>('/auth/send-otp', params);
-  return response.data;
+  try {
+    const response = await api.post<RequestOTPResponse>('/auth/send-otp', params);
+    return response.data;
+  } catch (error) {
+    // Error is already enhanced by API interceptor, just re-throw
+    throw error;
+  }
 }
 
 /**
@@ -63,15 +69,20 @@ export function decodeJWT(token: string): JWTPayload {
  * Verify OTP and login to get access token
  */
 export async function verifyOTP(params: VerifyOTPParams): Promise<VerifyOTPResponse> {
-  const response = await api.post<VerifyOTPResponse>('/auth/login', params);
-  
-  // Validate response structure
-  if (!response.data || !response.data.accessToken) {
-    console.error('Invalid login response structure:', response.data);
-    throw new Error('Invalid response from server. Please try again.');
+  try {
+    const response = await api.post<VerifyOTPResponse>('/auth/login', params);
+    
+    // Validate response structure
+    if (!response.data || !response.data.accessToken) {
+      console.error('Invalid login response structure:', response.data);
+      throw new Error('Invalid response from server. Please try again.');
+    }
+    
+    return response.data;
+  } catch (error) {
+    // Error is already enhanced by API interceptor
+    throw error;
   }
-  
-  return response.data;
 }
 
 /**

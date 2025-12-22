@@ -15,6 +15,8 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Reset mutation state before making a new request
+    requestOTPMutation.reset();
     requestOTPMutation.mutate({ countryCode, mobileNo });
   };
 

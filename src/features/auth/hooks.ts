@@ -14,6 +14,7 @@ export function useRequestOTP() {
 
   return useMutation({
     mutationFn: (params: RequestOTPParams) => requestOTP(params),
+    retry: false, // Don't retry OTP requests automatically
     onSuccess: (data, variables) => {
       // Phase 0: Mobile-only OTP - always clear email
       storage.setUserEmail('');
@@ -35,6 +36,7 @@ export function useVerifyOTP() {
 
   return useMutation({
     mutationFn: (params: VerifyOTPParams) => verifyOTP(params),
+    retry: false, // Don't retry OTP verification automatically
     onSuccess: (data) => {
       // Validate response data
       if (!data || !data.accessToken) {

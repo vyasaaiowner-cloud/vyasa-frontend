@@ -15,6 +15,13 @@ export interface UpdateStudentDto {
   classId?: string;
   sectionId?: string;
   rollNo?: number;
+  parents?: Array<{
+    parentId?: string;
+    name: string;
+    email?: string;
+    countryCode: string;
+    mobileNo: string;
+  }>;
 }
 
 export interface Student {

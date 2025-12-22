@@ -296,7 +296,16 @@ export default function TeachersManagementPage() {
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => handleAssignSections(teacher)}
+                            title="Assign Sections"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => toggleActiveMutation.mutate({ id: teacher.id, isActive: teacher.isActive })}
+                            title={teacher.isActive ? 'Deactivate' : 'Activate'}
                           >
                             {teacher.isActive ? (
                               <UserX className="h-4 w-4" />
@@ -320,6 +329,62 @@ export default function TeachersManagementPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Assign Sections Dialog */}
+        <Dialog open={isAssignOpen} onOpenChange={setIsAssignOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Assign Sections to {editingTeacher?.user.name}</DialogTitle>
+              <DialogDescription>
+                Select the sections this teacher should be assigned to
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              {classes.map(classItem => (
+                <div key={classItem.id} className="space-y-2">
+                  <h4 className="font-semibold text-sm">{classItem.name}</h4>
+                  <div className="grid grid-cols-2 gap-2 ml-4">
+                    {classItem.sections.map(section => (
+                      <div key={section.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={section.id}
+                          checked={selectedSections.includes(section.id)}
+                          onCheckedChange={() => handleSectionToggle(section.id)}
+                        />
+                        <Label
+                          htmlFor={section.id}
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          {section.name}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsAssignOpen(false);
+                  setEditingTeacher(null);
+                  setSelectedSections([]);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleUpdateSections}
+                disabled={updateSectionsMutation.isPending}
+              >
+                {updateSectionsMutation.isPending ? 'Updating...' : 'Update Sections'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>

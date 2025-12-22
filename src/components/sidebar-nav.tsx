@@ -41,15 +41,15 @@ const navItems: NavItem[] = [
   },
   // School Admin items
   {
-    title: 'Teachers',
-    href: '/dashboard/admin/teachers',
-    icon: Users,
-    roles: ['SCHOOL_ADMIN'],
-  },
-  {
     title: 'Classes',
     href: '/dashboard/admin/classes',
     icon: BookOpen,
+    roles: ['SCHOOL_ADMIN'],
+  },
+  {
+    title: 'Teachers',
+    href: '/dashboard/admin/teachers',
+    icon: Users,
     roles: ['SCHOOL_ADMIN'],
   },
   {
@@ -83,6 +83,19 @@ const navItems: NavItem[] = [
     icon: BookOpen,
     roles: ['TEACHER'],
   },
+  // Parent items
+  {
+    title: 'Announcements',
+    href: '/dashboard/parent/announcements',
+    icon: Megaphone,
+    roles: ['PARENT'],
+  },
+  {
+    title: 'Holidays',
+    href: '/dashboard/parent/holidays',
+    icon: Calendar,
+    roles: ['PARENT'],
+  },
 ];
 
 interface SidebarNavProps {
@@ -109,6 +122,8 @@ export function SidebarNav({ userRole }: SidebarNavProps) {
               pathname === '/dashboard/super-admin' ||
               pathname === '/dashboard/teacher' ||
               pathname === '/dashboard/parent'
+            : item.href === '/dashboard/parent' && (item.title === 'Holidays' || item.title === 'Announcements')
+            ? false // Parent Holidays/Announcements are never highlighted (they just navigate to tabs)
             : pathname === item.href || pathname.startsWith(item.href + '/');
           
           return (

@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { extractErrorMessage } from '@/lib/error-handler';
 
 // School scope guard middleware
 let currentSchoolId: string | null = null;
@@ -92,44 +93,51 @@ export async function scopedApiCall<T>(
     method = options.method || 'GET';
   }
   
-  // Build axios config
-  const axiosConfig: any = {
-    method: method.toLowerCase(),
-    url,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-School-Id': schoolId, // For backend routing/caching (NOT authorization)
-      ...(options.headers || {}),
-    },
-  };
-  
-  // Handle body/data
-  if (options.body) {
-    axiosConfig.data = options.body;
-  } else if (options.data) {
-    axiosConfig.data = options.data;
-  } else if (legacyData) {
-    axiosConfig.data = legacyData;
-  }
-  
-  // Handle query params
-  if (options.params) {
-    axiosConfig.params = options.params;
-  }
-  
-  const response = await api.request<T>(axiosConfig);
-  
-  // Validate response data contains correct school scope (optional check)
-  // Backend is authoritative, this is just a sanity check
-  if (response.data && typeof response.data === 'object') {
-    const responseSchoolId = (response.data as any).schoolId;
-    if (responseSchoolId && responseSchoolId !== schoolId) {
-      console.error('School scope mismatch:', { expected: schoolId, received: responseSchoolId });
-      // Don't throw - backend is authoritative
+  try {
+    // Build axios config
+    const axiosConfig: any = {
+      method: method.toLowerCase(),
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-School-Id': schoolId, // For backend routing/caching (NOT authorization)
+        ...(options.headers || {}),
+      },
+    };
+    
+    // Handle body/data
+    if (options.body) {
+      axiosConfig.data = options.body;
+    } else if (options.data) {
+      axiosConfig.data = options.data;
+    } else if (legacyData) {
+      axiosConfig.data = legacyData;
     }
+    
+    // Handle query params
+    if (options.params) {
+      axiosConfig.params = options.params;
+    }
+    
+    const response = await api.request<T>(axiosConfig);
+    
+    // Validate response data contains correct school scope (optional check)
+    // Backend is authoritative, this is just a sanity check
+    if (response.data && typeof response.data === 'object') {
+      const responseSchoolId = (response.data as any).schoolId;
+      if (responseSchoolId && responseSchoolId !== schoolId) {
+        console.error('School scope mismatch:', { expected: schoolId, received: responseSchoolId });
+        // Don't throw - backend is authoritative
+      }
+    }
+    
+    return response.data;
+  } catch (error) {
+    // Error is already enhanced by the API interceptor
+    // Just re-throw it with additional context if needed
+    const errorMessage = extractErrorMessage(error);
+    throw new Error(errorMessage);
   }
-  
-  return response.data;
 }
 
 /**

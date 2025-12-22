@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, UserPlus, X } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TableSkeleton } from '@/components/skeletons';
 import { studentsApi } from '@/features/students/api';
@@ -27,6 +27,14 @@ export default function StudentsManagementPage() {
   const [studentToDelete, setStudentToDelete] = useState<string | null>(null);
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [selectedSection, setSelectedSection] = useState<string>('');
+  const [editParents, setEditParents] = useState<Array<{
+    name: string;
+    email: string;
+    countryCode: string;
+    mobileNo: string;
+    isExisting?: boolean;
+    parentId?: string;
+  }>>([]);
   const [formData, setFormData] = useState<CreateStudentDto>({
     name: '',
     classId: '',
@@ -121,6 +129,16 @@ export default function StudentsManagementPage() {
 
   const handleEdit = (student: Student) => {
     setEditingStudent(student);
+    // Initialize parents from existing data
+    const existingParents = student.parents?.map(p => ({
+      name: p.parent.name,
+      email: p.parent.email || '',
+      countryCode: p.parent.phoneCode,
+      mobileNo: p.parent.phoneNumber,
+      isExisting: true,
+      parentId: p.parentId,
+    })) || [];
+    setEditParents(existingParents);
     setIsEditOpen(true);
   };
 
@@ -131,6 +149,13 @@ export default function StudentsManagementPage() {
     const updateData: UpdateStudentDto = {
       name: editingStudent.name,
       rollNo: editingStudent.rollNo,
+      parents: editParents.map(p => ({
+        parentId: p.parentId, // Include parentId if it's an existing parent
+        name: p.name,
+        email: p.email || undefined,
+        countryCode: p.countryCode,
+        mobileNo: p.mobileNo.replace(/\D/g, ''),
+      })),
     };
     
     updateMutation.mutate({ id: editingStudent.id, data: updateData });
@@ -394,11 +419,11 @@ export default function StudentsManagementPage() {
 
         {/* Edit Dialog */}
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleUpdate}>
               <DialogHeader>
                 <DialogTitle>Edit Student</DialogTitle>
-                <DialogDescription>Update student information</DialogDescription>
+                <DialogDescription>Update student information and manage parents</DialogDescription>
               </DialogHeader>
               {editingStudent && (
                 <div className="space-y-4 py-4">
@@ -437,10 +462,110 @@ export default function StudentsManagementPage() {
                       />
                     </div>
                   </div>
+
+                  {/* Parents Section */}
+                  <div className="border-t pt-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Parents</h4>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditParents([...editParents, {
+                          name: '',
+                          email: '',
+                          countryCode: '+91',
+                          mobileNo: '',
+                          isExisting: false,
+                        }])}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add Parent
+                      </Button>
+                    </div>
+                    
+                    {editParents.length === 0 ? (
+                      <p className="text-sm text-slate-500">No parents added yet</p>
+                    ) : (
+                      <div className="space-y-4">
+                        {editParents.map((parent, index) => (
+                          <div key={index} className="border rounded-lg p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm font-medium">Parent {index + 1}</Label>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setEditParents(editParents.filter((_, i) => i !== index))}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="grid gap-3">
+                              <div className="space-y-2">
+                                <Label className="text-xs">Name</Label>
+                                <Input
+                                  value={parent.name}
+                                  onChange={(e) => {
+                                    const newParents = [...editParents];
+                                    newParents[index].name = e.target.value;
+                                    setEditParents(newParents);
+                                  }}
+                                  placeholder="Parent name"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-xs">Email</Label>
+                                <Input
+                                  type="email"
+                                  value={parent.email}
+                                  onChange={(e) => {
+                                    const newParents = [...editParents];
+                                    newParents[index].email = e.target.value;
+                                    setEditParents(newParents);
+                                  }}
+                                  placeholder="parent@example.com"
+                                />
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                <div className="space-y-2">
+                                  <Label className="text-xs">Code</Label>
+                                  <Input
+                                    value={parent.countryCode}
+                                    onChange={(e) => {
+                                      const newParents = [...editParents];
+                                      newParents[index].countryCode = e.target.value.trim();
+                                      setEditParents(newParents);
+                                    }}
+                                    placeholder="+91"
+                                  />
+                                </div>
+                                <div className="col-span-2 space-y-2">
+                                  <Label className="text-xs">Mobile</Label>
+                                  <Input
+                                    value={parent.mobileNo}
+                                    onChange={(e) => {
+                                      const newParents = [...editParents];
+                                      newParents[index].mobileNo = e.target.value;
+                                      setEditParents(newParents);
+                                    }}
+                                    placeholder="9876543210"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => {
+                  setIsEditOpen(false);
+                  setEditParents([]);
+                }}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={updateMutation.isPending}>
