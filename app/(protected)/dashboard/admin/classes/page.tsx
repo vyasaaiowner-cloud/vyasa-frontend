@@ -228,6 +228,40 @@ export default function ClassesManagementPage() {
           </div>
         </div>
 
+        {/* Filter */}
+        {classes.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Filter</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-4 items-end">
+                <div className="flex-1 space-y-2">
+                  <Label>Filter by Class</Label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={selectedClassId}
+                    onChange={(e) => setSelectedClassId(e.target.value)}
+                  >
+                    <option value="">All Classes</option>
+                    {classes.map(cls => (
+                      <option key={cls.id} value={cls.id}>{cls.name}</option>
+                    ))}
+                  </select>
+                </div>
+                {selectedClassId && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSelectedClassId('')}
+                  >
+                    Clear Filter
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Classes List */}
         <div className="grid gap-6">
           {isLoading ? (
@@ -245,7 +279,9 @@ export default function ClassesManagementPage() {
               </CardContent>
             </Card>
           ) : (
-            classes.map(cls => (
+            classes
+              .filter(cls => !selectedClassId || cls.id === selectedClassId)
+              .map(cls => (
               <Card key={cls.id}>
                 <CardHeader>
                   <div className="flex items-center justify-between">

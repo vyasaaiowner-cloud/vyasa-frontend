@@ -1,5 +1,5 @@
 import { scopedApiCall } from '@/lib/school-scope';
-import type { Holiday, CreateHolidayDto, UpdateHolidayDto } from './types';
+import type { Holiday, CreateHolidayDto, UpdateHolidayDto, BulkUploadResult } from './types';
 
 export const holidaysApi = {
   /**
@@ -35,5 +35,16 @@ export const holidaysApi = {
    */
   delete: async (id: string): Promise<{ message: string }> => {
     return scopedApiCall('delete', `/holidays/${id}`);
+  },
+
+  /**
+   * Bulk upload holidays from CSV/Excel file
+   */
+  bulkUpload: async (file: File): Promise<BulkUploadResult> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response: any = await scopedApiCall('post', '/holidays/bulk-upload', formData);
+    // Backend returns { message, results: { success, failed, errors } }
+    return response.results || response;
   },
 };

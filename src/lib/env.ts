@@ -15,8 +15,8 @@ function getEnvVar(key: string, fallback?: string): string {
 export const env = {
   // apiBaseUrl: getEnvVar('NEXT_PUBLIC_API_BASE_URL', 'http://localhost:8000'),
   apiBaseUrl: getEnvVar('NEXT_PUBLIC_API_BASE_URL', 'https://vyasa-backend.onrender.com'),
-  googleClientId: getEnvVar('NEXT_PUBLIC_GOOGLE_CLIENT_ID', ''),
-  googleRedirectUri: getEnvVar('NEXT_PUBLIC_GOOGLE_REDIRECT_URI', typeof window !== 'undefined' ? 'https://vyasa-backend.onrender.com/auth/callback/google' : ''),
+  googleClientId: getEnvVar('NEXT_PUBLIC_GOOGLE_CLIENT_ID', '85393428710-j6siqe4c3ak4b0dbucc82464b8cg003j.apps.googleusercontent.com'),
+  googleRedirectUri: getEnvVar('NEXT_PUBLIC_GOOGLE_REDIRECT_URI', 'https://www.vyasaai.com/auth/callback/google'),
   // googleRedirectUri: typeof window !== 'undefined' ? 'http://localhost:8000/auth/callback/google' : '',
 } as const;
 

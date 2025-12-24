@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -46,6 +46,33 @@ export default function TeacherAttendancePage() {
     enabled: !!selectedSectionId && !!selectedSection?.classId,
   });
 
+  // Fetch existing attendance for selected section and date
+  const { data: existingAttendance = [], isLoading: attendanceLoading } = useQuery({
+    queryKey: ['attendance', selectedSectionId, date],
+    queryFn: () => attendanceApi.getBySectionAndDate(selectedSectionId, date),
+    enabled: !!selectedSectionId && !!date,
+  });
+
+  // Pre-fill attendance data when existing attendance is loaded
+  useEffect(() => {
+    if (existingAttendance.length > 0) {
+      const prefilledData: Record<string, AttendanceStatus> = {};
+      existingAttendance.forEach(record => {
+        prefilledData[record.studentId] = record.status;
+      });
+      // Only update if the data is actually different
+      setAttendanceData(prev => {
+        const isDifferent = JSON.stringify(prev) !== JSON.stringify(prefilledData);
+        return isDifferent ? prefilledData : prev;
+      });
+    } else if (selectedSectionId && date && existingAttendance.length === 0 && !attendanceLoading) {
+      // Clear attendance data only when we've confirmed there's no existing attendance
+      setAttendanceData(prev => {
+        return Object.keys(prev).length > 0 ? {} : prev;
+      });
+    }
+  }, [existingAttendance.length, selectedSectionId, date, attendanceLoading]);
+
   // Submit attendance mutation
   const submitAttendanceMutation = useMutation({
     mutationFn: async () => {
@@ -58,15 +85,21 @@ export default function TeacherAttendancePage() {
         status: attendanceData[student.id] || 'ABSENT' as AttendanceStatus,
       }));
 
-      return attendanceApi.mark({
+      const payload = {
         sectionId: selectedSectionId,
         date,
         attendances,
-      });
+      };
+
+      // Use update endpoint if attendance already exists, otherwise use mark
+      if (existingAttendance.length > 0) {
+        return attendanceApi.update(payload);
+      } else {
+        return attendanceApi.mark(payload);
+      }
     },
     onSuccess: () => {
-      toast.success('Attendance submitted successfully!');
-      setAttendanceData({});
+      toast.success(existingAttendance.length > 0 ? 'Attendance updated successfully!' : 'Attendance submitted successfully!');
       queryClient.invalidateQueries({ queryKey: ['attendance'] });
     },
     onError: (error: Error) => {
@@ -163,10 +196,19 @@ export default function TeacherAttendancePage() {
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
+                <p className="text-xs text-slate-500">You can only mark attendance for today or past dates</p>
               </div>
             </div>
+            {existingAttendance.length > 0 && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-900">
+                  ℹ️ Attendance for this date has already been marked. You can update it by changing the status and submitting again.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -291,7 +333,10 @@ export default function TeacherAttendancePage() {
               onClick={handleSubmit}
               disabled={submitAttendanceMutation.isPending || Object.keys(attendanceData).length === 0}
             >
-              {submitAttendanceMutation.isPending ? 'Submitting...' : 'Submit Attendance'}
+              {submitAttendanceMutation.isPending 
+                ? (existingAttendance.length > 0 ? 'Updating...' : 'Submitting...') 
+                : (existingAttendance.length > 0 ? 'Update Attendance' : 'Submit Attendance')
+              }
             </Button>
           </div>
         )}

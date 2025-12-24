@@ -63,11 +63,11 @@ export const studentsApi = {
     const formData = new FormData();
     formData.append('file', file);
 
-    return scopedApiCall('/students/bulk-upload', {
+    const response: any = await scopedApiCall('/students/bulk-upload', {
       method: 'POST',
       body: formData,
-      // Don't set Content-Type header - browser will set it with boundary
-      headers: {},
     });
+    // Backend returns { message, results: { success, failed, errors } }
+    return response.results || response;
   },
 };

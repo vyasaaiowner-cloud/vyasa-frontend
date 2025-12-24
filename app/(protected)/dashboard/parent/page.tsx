@@ -13,7 +13,7 @@ import type { AttendanceStatus } from '@/features/attendance/types';
 // Helper to safely get class and section display
 const getClassDisplay = (student: any) => {
   const className = student.className || student.class?.name || 'N/A';
-  const sectionName = student.section || student.section?.name || 'N/A';
+  const sectionName = student.sectionName || student.section?.name || 'N/A';
   return `${className} - ${sectionName}`;
 };
 

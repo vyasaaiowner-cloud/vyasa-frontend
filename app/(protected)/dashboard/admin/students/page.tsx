@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, UserPlus, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, UserPlus, X, Upload } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TableSkeleton } from '@/components/skeletons';
 import { studentsApi } from '@/features/students/api';
@@ -17,6 +17,7 @@ import type { Student, CreateStudentDto, UpdateStudentDto } from '@/features/stu
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { getSchoolContext } from '@/lib/school-scope';
+import Link from 'next/link';
 
 export default function StudentsManagementPage() {
   const queryClient = useQueryClient();
@@ -27,6 +28,8 @@ export default function StudentsManagementPage() {
   const [studentToDelete, setStudentToDelete] = useState<string | null>(null);
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [selectedSection, setSelectedSection] = useState<string>('');
+  const [searchName, setSearchName] = useState<string>('');
+  const [searchRollNo, setSearchRollNo] = useState<string>('');
   const [editParents, setEditParents] = useState<Array<{
     name: string;
     email: string;
@@ -54,10 +57,35 @@ export default function StudentsManagementPage() {
     queryFn: () => classesApi.getAll(),
   });
 
-  // Fetch students with school-scoped cache key
+  // Fetch students with school-scoped cache key (fetch all students)
   const { data: students = [], isLoading } = useQuery({
-    queryKey: ['students', schoolId, selectedClass, selectedSection],
-    queryFn: () => studentsApi.getAll(selectedClass || undefined, selectedSection || undefined),
+    queryKey: ['students', schoolId],
+    queryFn: () => studentsApi.getAll(),
+  });
+
+  // Frontend filtering
+  const filteredStudents = students.filter(student => {
+    // Filter by name (case insensitive)
+    if (searchName && !student.name.toLowerCase().includes(searchName.toLowerCase())) {
+      return false;
+    }
+    
+    // Filter by roll number
+    if (searchRollNo && !student.rollNo.toString().includes(searchRollNo)) {
+      return false;
+    }
+    
+    // Filter by class
+    if (selectedClass && student.class.name !== selectedClass) {
+      return false;
+    }
+    
+    // Filter by section (case insensitive)
+    if (selectedSection && !student.section.name.toLowerCase().includes(selectedSection.toLowerCase())) {
+      return false;
+    }
+    
+    return true;
   });
 
   // Create student mutation
@@ -181,134 +209,142 @@ export default function StudentsManagementPage() {
             <h2 className="text-3xl font-bold tracking-tight">Students</h2>
             <p className="text-slate-600">Manage student records</p>
           </div>
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Student
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <form onSubmit={handleSubmit}>
-                <DialogHeader>
-                  <DialogTitle>Add New Student</DialogTitle>
-                  <DialogDescription>Create a new student record</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="studentName">Student Name</Label>
-                    <Input
-                      id="studentName"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/admin/students/bulk-upload">
+                <Upload className="h-4 w-4 mr-2" />
+                Bulk Upload
+              </Link>
+            </Button>
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Student
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <form onSubmit={handleSubmit}>
+                  <DialogHeader>
+                    <DialogTitle>Add New Student</DialogTitle>
+                    <DialogDescription>Create a new student record</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                      <Label htmlFor="classId">Class *</Label>
-                      <Select
-                        value={formData.classId}
-                        onValueChange={(value) => setFormData({ ...formData, classId: value, sectionId: '' })}
-                        required
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select class" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {classes.map((cls) => (
-                            <SelectItem key={cls.id} value={cls.id}>
-                              {cls.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="sectionId">Section *</Label>
-                      <Select
-                        value={formData.sectionId}
-                        onValueChange={(value) => setFormData({ ...formData, sectionId: value })}
-                        disabled={!formData.classId}
-                        required
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select section" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {classes
-                            .find((c) => c.id === formData.classId)
-                            ?.sections.map((section) => (
-                              <SelectItem key={section.id} value={section.id}>
-                                {section.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="rollNo">Roll No</Label>
+                      <Label htmlFor="studentName">Student Name</Label>
                       <Input
-                        id="rollNo"
-                        type="number"
-                        value={formData.rollNo}
-                        onChange={(e) => setFormData({ ...formData, rollNo: parseInt(e.target.value) })}
+                        id="studentName"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         required
                       />
                     </div>
-                  </div>
-                  <div className="border-t pt-4">
-                    <h4 className="font-medium mb-4">Parent Information (Optional)</h4>
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-2">
                       <div className="space-y-2">
-                        <Label htmlFor="parentName">Parent Name</Label>
-                        <Input
-                          id="parentName"
-                          value={formData.parentName}
-                          onChange={(e) => setFormData({ ...formData, parentName: e.target.value })}
-                        />
+                        <Label htmlFor="classId">Class *</Label>
+                        <Select
+                          value={formData.classId}
+                          onValueChange={(value) => setFormData({ ...formData, classId: value, sectionId: '' })}
+                          required
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select class" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {classes.map((cls) => (
+                              <SelectItem key={cls.id} value={cls.id}>
+                                {cls.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="parentEmail">Parent Email</Label>
+                        <Label htmlFor="sectionId">Section *</Label>
+                        <Select
+                          value={formData.sectionId}
+                          onValueChange={(value) => setFormData({ ...formData, sectionId: value })}
+                          disabled={!formData.classId}
+                          required
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select section" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {classes
+                              .find((c) => c.id === formData.classId)
+                              ?.sections.map((section) => (
+                                <SelectItem key={section.id} value={section.id}>
+                                  {section.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="rollNo">Roll No</Label>
                         <Input
-                          id="parentEmail"
-                          type="email"
-                          value={formData.parentEmail}
-                          onChange={(e) => setFormData({ ...formData, parentEmail: e.target.value })}
+                          id="rollNo"
+                          type="number"
+                          value={formData.rollNo}
+                          onChange={(e) => setFormData({ ...formData, rollNo: parseInt(e.target.value) })}
+                          required
                         />
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
+                    </div>
+                    <div className="border-t pt-4">
+                      <h4 className="font-medium mb-4">Parent Information (Optional)</h4>
+                      <div className="space-y-4">
                         <div className="space-y-2">
-                          <Label htmlFor="parentCode">Code</Label>
+                          <Label htmlFor="parentName">Parent Name</Label>
                           <Input
-                            id="parentCode"
-                            value={formData.parentCountryCode}
-                            onChange={(e) => setFormData({ ...formData, parentCountryCode: e.target.value.trim() })}
+                            id="parentName"
+                            value={formData.parentName}
+                            onChange={(e) => setFormData({ ...formData, parentName: e.target.value })}
                           />
                         </div>
-                        <div className="col-span-2 space-y-2">
-                          <Label htmlFor="parentMobile">Mobile</Label>
+                        <div className="space-y-2">
+                          <Label htmlFor="parentEmail">Parent Email</Label>
                           <Input
-                            id="parentMobile"
-                            value={formData.parentMobileNo}
-                            onChange={(e) => setFormData({ ...formData, parentMobileNo: e.target.value })}
+                            id="parentEmail"
+                            type="email"
+                            value={formData.parentEmail}
+                            onChange={(e) => setFormData({ ...formData, parentEmail: e.target.value })}
                           />
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="parentCode">Code</Label>
+                            <Input
+                              id="parentCode"
+                              value={formData.parentCountryCode}
+                              onChange={(e) => setFormData({ ...formData, parentCountryCode: e.target.value.trim() })}
+                            />
+                          </div>
+                          <div className="col-span-2 space-y-2">
+                            <Label htmlFor="parentMobile">Mobile</Label>
+                            <Input
+                              id="parentMobile"
+                              value={formData.parentMobileNo}
+                              onChange={(e) => setFormData({ ...formData, parentMobileNo: e.target.value })}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending ? 'Creating...' : 'Create Student'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={createMutation.isPending}>
+                      {createMutation.isPending ? 'Creating...' : 'Create Student'}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Filters */}
@@ -317,7 +353,23 @@ export default function StudentsManagementPage() {
             <CardTitle>Filters</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-4">
+              <div className="space-y-2">
+                <Label>Search by Name</Label>
+                <Input
+                  placeholder="Enter student name"
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Search by Roll No</Label>
+                <Input
+                  placeholder="Enter roll number"
+                  value={searchRollNo}
+                  onChange={(e) => setSearchRollNo(e.target.value)}
+                />
+              </div>
               <div className="space-y-2">
                 <Label>Class</Label>
                 <Select value={selectedClass || "all"} onValueChange={(value) => setSelectedClass(value === "all" ? "" : value)}>
@@ -343,6 +395,22 @@ export default function StudentsManagementPage() {
                 />
               </div>
             </div>
+            {(searchName || searchRollNo || selectedClass || selectedSection) && (
+              <div className="mt-4">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setSearchName('');
+                    setSearchRollNo('');
+                    setSelectedClass('');
+                    setSelectedSection('');
+                  }}
+                >
+                  Clear All Filters
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -351,15 +419,18 @@ export default function StudentsManagementPage() {
           <CardHeader>
             <CardTitle>All Students</CardTitle>
             <CardDescription>
-              {students.length} student{students.length !== 1 ? 's' : ''} found
+              {filteredStudents.length} student{filteredStudents.length !== 1 ? 's' : ''} found
+              {(searchName || searchRollNo || selectedClass || selectedSection) && ` (filtered from ${students.length} total)`}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <TableSkeleton rows={10} />
-            ) : students.length === 0 ? (
+            ) : filteredStudents.length === 0 ? (
               <div className="text-center py-8 text-slate-500">
-                <p className="text-sm">No students found.</p>
+                <p className="text-sm">
+                  {students.length === 0 ? 'No students found.' : 'No students match the current filters.'}
+                </p>
               </div>
             ) : (
               <Table>
@@ -374,7 +445,7 @@ export default function StudentsManagementPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {students.map(student => (
+                  {filteredStudents.map(student => (
                     <TableRow key={student.id}>
                       <TableCell className="font-medium">{student.rollNo}</TableCell>
                       <TableCell>{student.name}</TableCell>

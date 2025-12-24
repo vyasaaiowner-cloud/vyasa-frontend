@@ -44,3 +44,12 @@ export interface TeacherAssignment {
     };
   };
 }
+
+export interface BulkUploadResult {
+  success: number;
+  failed: number;
+  errors?: Array<{
+    row: number;
+    error: string;
+  }>;
+}

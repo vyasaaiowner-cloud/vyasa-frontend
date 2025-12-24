@@ -17,3 +17,12 @@ export interface Holiday {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface BulkUploadResult {
+  success: number;
+  failed: number;
+  errors?: Array<{
+    row: number;
+    error: string;
+  }>;
+}

@@ -18,6 +18,16 @@ export const attendanceApi = {
   },
 
   /**
+   * Update existing attendance for a class/section
+   */
+  update: async (data: MarkAttendanceDto): Promise<MarkAttendanceResponse> => {
+    return scopedApiCall('/attendance/update', {
+      method: 'PUT',
+      body: data,
+    });
+  },
+
+  /**
    * Get attendance records for a class/section
    */
   getByClass: async (
@@ -70,6 +80,22 @@ export const attendanceApi = {
     const query = params.toString();
     return scopedApiCall(
       `/attendance/my-children${query ? `?${query}` : ''}`,
+      { method: 'GET' }
+    );
+  },
+
+  /**
+   * Get attendance for a specific section and date
+   */
+  getBySectionAndDate: async (
+    sectionId: string,
+    date: string
+  ): Promise<AttendanceRecord[]> => {
+    const params = new URLSearchParams();
+    params.append('date', date);
+    
+    return scopedApiCall(
+      `/attendance/section/${sectionId}?${params.toString()}`,
       { method: 'GET' }
     );
   },

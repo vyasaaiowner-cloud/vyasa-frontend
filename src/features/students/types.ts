@@ -68,7 +68,7 @@ export interface ParentLink {
 export interface BulkUploadResult {
   success: number;
   failed: number;
-  errors: Array<{
+  errors?: Array<{
     row: number;
     error: string;
   }>;

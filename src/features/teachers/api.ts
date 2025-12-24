@@ -1,5 +1,5 @@
 import { scopedApiCall } from '@/lib/school-scope';
-import type { Teacher, CreateTeacherDto, UpdateTeacherDto } from './types';
+import type { Teacher, CreateTeacherDto, UpdateTeacherDto, BulkUploadResult } from './types';
 
 export const teachersApi = {
   /**
@@ -68,5 +68,21 @@ export const teachersApi = {
     return scopedApiCall(`/teachers/${id}`, {
       method: 'DELETE',
     });
+  },
+
+  /**
+   * Bulk upload teachers from CSV file
+   */
+  bulkUpload: async (file: File): Promise<BulkUploadResult> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response: any = await scopedApiCall('/teachers/bulk-upload', {
+      method: 'POST',
+      body: formData,
+      headers: {},
+    });
+    // Backend returns { message, results: { success, failed, errors } }
+    return response.results || response;
   },
 };

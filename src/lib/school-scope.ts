@@ -94,16 +94,23 @@ export async function scopedApiCall<T>(
   }
   
   try {
+    // Detect if body is FormData to avoid setting Content-Type
+    const isFormData = options.body instanceof FormData || legacyData instanceof FormData;
+    
     // Build axios config
     const axiosConfig: any = {
       method: method.toLowerCase(),
       url,
       headers: {
-        'Content-Type': 'application/json',
         'X-School-Id': schoolId, // For backend routing/caching (NOT authorization)
         ...(options.headers || {}),
       },
     };
+    
+    // Only set Content-Type if not FormData (browser will set it with boundary)
+    if (!isFormData && !axiosConfig.headers['Content-Type']) {
+      axiosConfig.headers['Content-Type'] = 'application/json';
+    }
     
     // Handle body/data
     if (options.body) {

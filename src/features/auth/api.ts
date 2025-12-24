@@ -50,7 +50,20 @@ export async function requestOTP(params: RequestOTPParams): Promise<RequestOTPRe
  */
 export function decodeJWT(token: string): JWTPayload {
   try {
-    const base64Url = token.split('.')[1];
+    if (!token || typeof token !== 'string') {
+      throw new Error('Token is required and must be a string');
+    }
+
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      throw new Error('Invalid JWT format - expected 3 parts separated by dots');
+    }
+
+    const base64Url = parts[1];
+    if (!base64Url) {
+      throw new Error('Invalid JWT format - missing payload section');
+    }
+
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(
       atob(base64)
@@ -60,7 +73,7 @@ export function decodeJWT(token: string): JWTPayload {
     );
     return JSON.parse(jsonPayload);
   } catch (error) {
-    console.error('Failed to decode JWT:', error);
+    console.error('Failed to decode JWT:', error, 'Token:', token);
     throw new Error('Invalid token format');
   }
 }

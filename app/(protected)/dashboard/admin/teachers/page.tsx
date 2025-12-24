@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, UserCheck, UserX } from 'lucide-react';
+import { Plus, Pencil, Trash2, UserCheck, UserX, Upload } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TableSkeleton } from '@/components/skeletons';
 import { teachersApi } from '@/features/teachers/api';
@@ -18,6 +18,7 @@ import { classesApi } from '@/features/classes/api';
 import type { Teacher, CreateTeacherDto, UpdateTeacherDto } from '@/features/teachers/types';
 import { toast } from 'sonner';
 import { getSchoolContext } from '@/lib/school-scope';
+import Link from 'next/link';
 
 export default function TeachersManagementPage() {
   const queryClient = useQueryClient();
@@ -169,70 +170,78 @@ export default function TeachersManagementPage() {
             <h2 className="text-3xl font-bold tracking-tight">Teachers</h2>
             <p className="text-slate-600">Manage school teachers</p>
           </div>
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Teacher
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <form onSubmit={handleSubmit}>
-                <DialogHeader>
-                  <DialogTitle>Add New Teacher</DialogTitle>
-                  <DialogDescription>Create a new teacher account</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email (Optional)</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/admin/teachers/bulk-upload">
+                <Upload className="h-4 w-4 mr-2" />
+                Bulk Upload
+              </Link>
+            </Button>
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Teacher
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <form onSubmit={handleSubmit}>
+                  <DialogHeader>
+                    <DialogTitle>Add New Teacher</DialogTitle>
+                    <DialogDescription>Create a new teacher account</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                      <Label htmlFor="countryCode">Code</Label>
+                      <Label htmlFor="name">Full Name</Label>
                       <Input
-                        id="countryCode"
-                        value={formData.countryCode}
-                        onChange={(e) => setFormData({ ...formData, countryCode: e.target.value.trim() })}
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         required
                       />
                     </div>
-                    <div className="col-span-2 space-y-2">
-                      <Label htmlFor="mobileNo">Mobile Number</Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email (Optional)</Label>
                       <Input
-                        id="mobileNo"
-                        value={formData.mobileNo}
-                        onChange={(e) => setFormData({ ...formData, mobileNo: e.target.value })}
-                        required
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="countryCode">Code</Label>
+                        <Input
+                          id="countryCode"
+                          value={formData.countryCode}
+                          onChange={(e) => setFormData({ ...formData, countryCode: e.target.value.trim() })}
+                          required
+                        />
+                      </div>
+                      <div className="col-span-2 space-y-2">
+                        <Label htmlFor="mobileNo">Mobile Number</Label>
+                        <Input
+                          id="mobileNo"
+                          value={formData.mobileNo}
+                          onChange={(e) => setFormData({ ...formData, mobileNo: e.target.value })}
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending ? 'Creating...' : 'Create Teacher'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={createMutation.isPending}>
+                      {createMutation.isPending ? 'Creating...' : 'Create Teacher'}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Teachers Table */}

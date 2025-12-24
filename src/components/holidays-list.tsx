@@ -11,15 +11,23 @@ export function HolidaysList() {
     queryFn: () => holidaysApi.getAll(),
   });
 
-  // Sort holidays by date
-  const sortedHolidays = [...holidays].sort((a, b) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-
-  // Filter upcoming holidays
+  // Sort holidays by date (upcoming first, then past)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const upcomingHolidays = sortedHolidays.filter(h => new Date(h.date) >= today);
+  
+  const sortedHolidays = [...holidays].sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    const isAUpcoming = dateA >= today;
+    const isBUpcoming = dateB >= today;
+    
+    // Upcoming holidays first
+    if (isAUpcoming && !isBUpcoming) return -1;
+    if (!isAUpcoming && isBUpcoming) return 1;
+    
+    // Within same category, sort by date
+    return dateA.getTime() - dateB.getTime();
+  });
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -32,7 +40,7 @@ export function HolidaysList() {
     });
   };
 
-  // Calculate days until holiday
+  // Calculate days until/since holiday
   const daysUntil = (dateString: string) => {
     const holidayDate = new Date(dateString);
     holidayDate.setHours(0, 0, 0, 0);
@@ -41,7 +49,9 @@ export function HolidaysList() {
     
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Tomorrow';
-    return `in ${diffDays} days`;
+    if (diffDays > 0) return `in ${diffDays} days`;
+    if (diffDays === -1) return 'Yesterday';
+    return `${Math.abs(diffDays)} days ago`;
   };
 
   return (
@@ -49,9 +59,9 @@ export function HolidaysList() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
-          Upcoming Holidays
+          Holidays
         </CardTitle>
-        <CardDescription>School holidays and observances</CardDescription>
+        <CardDescription>All school holidays and observances</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -60,29 +70,41 @@ export function HolidaysList() {
               <div key={i} className="h-16 bg-slate-100 rounded animate-pulse" />
             ))}
           </div>
-        ) : upcomingHolidays.length === 0 ? (
+        ) : sortedHolidays.length === 0 ? (
           <div className="text-center py-8 text-slate-500">
             <Calendar className="h-12 w-12 mx-auto mb-2 opacity-20" />
-            <p className="text-sm">No upcoming holidays</p>
+            <p className="text-sm">No holidays found</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {upcomingHolidays.slice(0, 5).map((holiday) => (
-              <div
-                key={holiday.id}
-                className="flex items-center justify-between p-3 rounded-lg border bg-slate-50"
-              >
-                <div>
-                  <p className="font-medium text-slate-900">{holiday.name}</p>
-                  <p className="text-sm text-slate-600">{formatDate(holiday.date)}</p>
+            {sortedHolidays.map((holiday) => {
+              const holidayDate = new Date(holiday.date);
+              const isPast = holidayDate < today;
+              return (
+                <div
+                  key={holiday.id}
+                  className={`flex items-center justify-between p-3 rounded-lg border ${
+                    isPast ? 'bg-slate-100 opacity-60' : 'bg-slate-50'
+                  }`}
+                >
+                  <div>
+                    <p className={`font-medium ${isPast ? 'text-slate-600' : 'text-slate-900'}`}>
+                      {holiday.name}
+                    </p>
+                    <p className="text-sm text-slate-600">{formatDate(holiday.date)}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`text-xs font-medium px-2 py-1 rounded ${
+                      isPast 
+                        ? 'text-slate-600 bg-slate-200' 
+                        : 'text-slate-700 bg-slate-200'
+                    }`}>
+                      {daysUntil(holiday.date)}
+                    </span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-xs font-medium text-slate-700 bg-slate-200 px-2 py-1 rounded">
-                    {daysUntil(holiday.date)}
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>
