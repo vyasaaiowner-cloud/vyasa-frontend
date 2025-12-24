@@ -21,6 +21,8 @@ const STORAGE_KEYS = {
   USER_EMAIL: 'userEmail',
   PENDING_MOBILE: 'pendingMobileNo',
   PENDING_COUNTRY_CODE: 'pendingCountryCode',
+  DEVICE_TOKEN: 'deviceToken',
+  REMEMBER_DEVICE: 'rememberDevice',
 } as const;
 
 class Storage {
@@ -120,6 +122,54 @@ class Storage {
       localStorage.removeItem(STORAGE_KEYS.PENDING_COUNTRY_CODE);
     } catch (error) {
       console.error('Failed to clear pending mobile:', error);
+    }
+  }
+
+  // Device token methods for "Remember me" functionality
+  setDeviceToken(token: string): void {
+    if (!this.isAvailable()) return;
+    try {
+      localStorage.setItem(STORAGE_KEYS.DEVICE_TOKEN, token);
+    } catch (error) {
+      console.error('Failed to save device token:', error);
+    }
+  }
+
+  getDeviceToken(): string | null {
+    if (!this.isAvailable()) return null;
+    try {
+      return localStorage.getItem(STORAGE_KEYS.DEVICE_TOKEN);
+    } catch (error) {
+      console.error('Failed to read device token:', error);
+      return null;
+    }
+  }
+
+  removeDeviceToken(): void {
+    if (!this.isAvailable()) return;
+    try {
+      localStorage.removeItem(STORAGE_KEYS.DEVICE_TOKEN);
+    } catch (error) {
+      console.error('Failed to remove device token:', error);
+    }
+  }
+
+  setRememberDevice(remember: boolean): void {
+    if (!this.isAvailable()) return;
+    try {
+      localStorage.setItem(STORAGE_KEYS.REMEMBER_DEVICE, String(remember));
+    } catch (error) {
+      console.error('Failed to save remember device preference:', error);
+    }
+  }
+
+  getRememberDevice(): boolean {
+    if (!this.isAvailable()) return false;
+    try {
+      return localStorage.getItem(STORAGE_KEYS.REMEMBER_DEVICE) === 'true';
+    } catch (error) {
+      console.error('Failed to read remember device preference:', error);
+      return false;
     }
   }
 }

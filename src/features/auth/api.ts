@@ -92,3 +92,110 @@ export async function getCurrentUser() {
   const response = await api.get('/auth/me');
   return response.data;
 }
+
+/**
+ * Email/Password login types and functions
+ */
+export interface EmailLoginParams {
+  email: string;
+  password: string;
+  deviceToken?: string;
+}
+
+export interface EmailLoginResponse {
+  accessToken: string;
+  deviceToken?: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    schoolId: string;
+  };
+}
+
+/**
+ * Login with email and password
+ */
+export async function emailLogin(params: EmailLoginParams): Promise<EmailLoginResponse> {
+  try {
+    const response = await api.post<EmailLoginResponse>('/auth/email-login', params);
+    
+    if (!response.data || !response.data.accessToken) {
+      throw new Error('Invalid response from server. Please try again.');
+    }
+    
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
+ * Google OAuth types and functions
+ */
+export interface GoogleAuthParams {
+  code: string;
+  deviceToken?: string;
+}
+
+export interface GoogleAuthResponse {
+  accessToken: string;
+  deviceToken?: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    schoolId: string;
+  };
+}
+
+/**
+ * Exchange Google OAuth code for access token
+ */
+export async function googleAuth(params: GoogleAuthParams): Promise<GoogleAuthResponse> {
+  try {
+    const response = await api.post<GoogleAuthResponse>('/auth/google', params);
+    
+    if (!response.data || !response.data.accessToken) {
+      throw new Error('Invalid response from server. Please try again.');
+    }
+    
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
+ * Login with device token (for remembered devices)
+ */
+export interface DeviceLoginParams {
+  deviceToken: string;
+}
+
+export interface DeviceLoginResponse {
+  accessToken: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    schoolId: string;
+  };
+}
+
+export async function deviceLogin(params: DeviceLoginParams): Promise<DeviceLoginResponse> {
+  try {
+    const response = await api.post<DeviceLoginResponse>('/auth/device-login', params);
+    
+    if (!response.data || !response.data.accessToken) {
+      throw new Error('Invalid response from server. Please try again.');
+    }
+    
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}
