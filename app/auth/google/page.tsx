@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { storage } from '@/lib/storage';
 import { setSchoolContext } from '@/lib/school-scope';
 import { decodeJWT } from '@/features/auth';
 
-export default function GoogleAuthCallbackPage() {
+function GoogleAuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -79,5 +79,26 @@ export default function GoogleAuthCallbackPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function GoogleAuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
+                <h2 className="text-xl font-semibold">Loading...</h2>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      }
+    >
+      <GoogleAuthCallbackContent />
+    </Suspense>
   );
 }
